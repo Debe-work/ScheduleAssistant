@@ -6,7 +6,7 @@
 - name // task名
 - category // GoogleTodoに登録する場合のカテゴリ名
 - detail // タスク詳細内容 (そのままタスク詳細として登録する)
-- startTime  // 開始時間目安 (ex: アプリ起動時, 12:00, タスクhogeのxx分後)
+- startTime  // 開始時間の目安。他の予定・タスクがない場合にこの時刻に配置する。当日に既存の予定やタスクがある場合は AI が空き時間に合わせてずらす (ex: アプリ起動時, 12:00, タスクhogeのxx分後)
 - endTime // 終了時間目安 (ex: 開始時間のxx分後)
 - defaultComplete // trueの場合は登録時点でステータスを完了にしておく
 - children // 子タスク。内容は親タスクにcategory, childrenが含まれないものを配列化した形
@@ -115,5 +115,4 @@ children: [
 ## 就寝
 name: 就寝
 category: DailyTask
-detail: nosh
-startTime: 月曜日は24:00
+startTime: 24:00
