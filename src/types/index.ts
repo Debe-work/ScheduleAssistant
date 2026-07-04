@@ -28,12 +28,6 @@ export type GeneratedSchedule = {
   summary: string;
 };
 
-export type TokenData = {
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-};
-
 export type GoogleTaskList = {
   id: string;
   title: string;

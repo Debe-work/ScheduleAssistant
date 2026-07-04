@@ -3,27 +3,17 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { PreviewPage } from './pages/PreviewPage';
 import { SettingsPage } from './pages/SettingsPage';
-import {
-  handleOAuthCallback,
-  parseOAuthCallback,
-  clearOAuthParams,
-} from './services/googleAuth';
 
 function OAuthHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const code = parseOAuthCallback();
-    if (!code) return;
+    const url = new URL(window.location.href);
+    const authError = url.searchParams.get('authError');
+    if (!authError) return;
 
-    handleOAuthCallback(code)
-      .then(() => {
-        clearOAuthParams();
-        window.location.href = import.meta.env.BASE_URL;
-      })
-      .catch((e) => {
-        console.error(e);
-        alert(`認証エラー: ${e instanceof Error ? e.message : e}`);
-        clearOAuthParams();
-      });
+    alert(`認証エラー: ${authError}`);
+    url.searchParams.delete('authError');
+    url.searchParams.delete('iss');
+    window.history.replaceState({}, '', url.pathname + url.search);
   }, []);
 
   return <>{children}</>;

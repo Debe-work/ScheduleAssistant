@@ -30,9 +30,9 @@ jobs:
       - name: Build
         env:
           GITHUB_PAGES: 'true'
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           VITE_TEMPLATE_SOURCE: local
+          VITE_WORKER_BASE_URL: ${{ secrets.VITE_WORKER_BASE_URL }}
         run: yarn build
 
       - uses: actions/upload-pages-artifact@v3

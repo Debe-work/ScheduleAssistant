@@ -9,7 +9,9 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    isAuthenticated().then(setAuthed);
+    isAuthenticated()
+      .then(setAuthed)
+      .catch(() => setAuthed(false));
     loadTemplates()
       .then(setTemplates)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));

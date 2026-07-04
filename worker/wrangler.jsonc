@@ -1,0 +1,23 @@
+{
+  "name": "schedule-assistant-oauth",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-04",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AUTH_STORE",
+        "class_name": "AuthStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AuthStore"]
+    }
+  ]
+}

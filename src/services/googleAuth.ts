@@ -1,151 +1,99 @@
-import { saveTokens, getTokens, clearTokens } from '../storage/tokenStore';
+type SessionResponse = {
+  authenticated: boolean;
+  expiresAt: number | null;
+};
 
-const SCOPES = [
-  'https://www.googleapis.com/auth/calendar',
-  'https://www.googleapis.com/auth/tasks',
-].join(' ');
+type AccessTokenResponse = {
+  accessToken: string;
+  expiresAt: number;
+};
 
-const PKCE_VERIFIER_KEY = 'oauth_pkce_verifier';
+let accessTokenCache: AccessTokenResponse | null = null;
 
-function getClientId(): string {
-  const id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  if (!id) throw new Error('VITE_GOOGLE_CLIENT_ID が設定されていません');
-  return id;
+function getWorkerBaseUrl(): string {
+  return import.meta.env.VITE_WORKER_BASE_URL?.replace(/\/$/, '') ?? '';
 }
 
-function getRedirectUri(): string {
-  return `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/$/, '') + '/';
+function buildWorkerUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${getWorkerBaseUrl()}${normalizedPath}`;
 }
 
-function base64UrlEncode(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  bytes.forEach((b) => (binary += String.fromCharCode(b)));
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+function clearAccessTokenCache(): void {
+  accessTokenCache = null;
 }
 
-async function generatePkce(): Promise<{ verifier: string; challenge: string }> {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  const verifier = base64UrlEncode(array.buffer);
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-  const challenge = base64UrlEncode(digest);
-  return { verifier, challenge };
+async function readError(res: Response): Promise<string> {
+  try {
+    const data = await res.json();
+    if (typeof data?.error === 'string') {
+      return data.error;
+    }
+  } catch {
+    // ignore JSON parse failure
+  }
+  return `認証 API エラー: ${res.status}`;
+}
+
+async function workerFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (init.method && init.method !== 'GET' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  return fetch(buildWorkerUrl(path), {
+    ...init,
+    headers,
+    credentials: 'include',
+  });
 }
 
 export async function startLogin(): Promise<void> {
-  const { verifier, challenge } = await generatePkce();
-  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
-
-  const params = new URLSearchParams({
-    client_id: getClientId(),
-    redirect_uri: getRedirectUri(),
-    response_type: 'code',
-    scope: SCOPES,
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-    access_type: 'offline',
-    prompt: 'consent',
-  });
-
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-}
-
-export async function handleOAuthCallback(code: string): Promise<void> {
-  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
-  if (!verifier) throw new Error('PKCE verifier が見つかりません');
-
-  const body = new URLSearchParams({
-    client_id: getClientId(),
-    code,
-    code_verifier: verifier,
-    grant_type: 'authorization_code',
-    redirect_uri: getRedirectUri(),
-  });
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`トークン取得失敗: ${err}`);
-  }
-
-  const data = await res.json();
-  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-
-  await saveTokens({
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  });
-}
-
-async function refreshAccessToken(refreshToken: string): Promise<string> {
-  const body = new URLSearchParams({
-    client_id: getClientId(),
-    refresh_token: refreshToken,
-    grant_type: 'refresh_token',
-  });
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-
-  if (!res.ok) throw new Error('トークン更新に失敗しました');
-
-  const data = await res.json();
-  const tokens = await getTokens();
-  await saveTokens({
-    accessToken: data.access_token,
-    refreshToken: tokens?.refreshToken ?? refreshToken,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  });
-  return data.access_token;
+  clearAccessTokenCache();
+  const returnTo = new URL(window.location.href);
+  returnTo.searchParams.delete('authError');
+  const loginUrl = new URL(buildWorkerUrl('/api/google/login'), window.location.href);
+  loginUrl.searchParams.set('returnTo', returnTo.toString());
+  window.location.href = loginUrl.toString();
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const tokens = await getTokens();
-  if (!tokens) return null;
-
-  if (Date.now() < tokens.expiresAt - 60_000) {
-    return tokens.accessToken;
+  if (accessTokenCache && Date.now() < accessTokenCache.expiresAt - 60_000) {
+    return accessTokenCache.accessToken;
   }
 
-  if (tokens.refreshToken) {
-    return refreshAccessToken(tokens.refreshToken);
+  const res = await workerFetch('/api/google/access-token');
+  if (res.status === 401) {
+    clearAccessTokenCache();
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(await readError(res));
   }
 
-  return null;
+  const data = await res.json() as AccessTokenResponse;
+  accessTokenCache = data;
+  return data.accessToken;
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  const token = await getAccessToken();
-  return token !== null;
+  if (accessTokenCache && Date.now() < accessTokenCache.expiresAt - 60_000) {
+    return true;
+  }
+
+  const res = await workerFetch('/api/google/session');
+  if (!res.ok) {
+    throw new Error(await readError(res));
+  }
+
+  const data = await res.json() as SessionResponse;
+  return data.authenticated;
 }
 
 export async function logout(): Promise<void> {
-  await clearTokens();
-}
-
-export function parseOAuthCallback(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const error = params.get('error');
-  if (error) throw new Error(`OAuth エラー: ${error}`);
-  return code;
-}
-
-export function clearOAuthParams(): void {
-  const url = new URL(window.location.href);
-  url.searchParams.delete('code');
-  url.searchParams.delete('scope');
-  url.searchParams.delete('authuser');
-  url.searchParams.delete('prompt');
-  window.history.replaceState({}, '', url.pathname + url.search);
+  clearAccessTokenCache();
+  const res = await workerFetch('/api/google/logout', { method: 'POST' });
+  if (!res.ok) {
+    throw new Error(await readError(res));
+  }
 }

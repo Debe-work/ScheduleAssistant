@@ -30,3 +30,7 @@ dist-ssr
 
 # Build
 *.tsbuildinfo
+
+# Cloudflare Workers
+worker/.dev.vars
+worker/.wrangler

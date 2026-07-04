@@ -18,7 +18,9 @@ export function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    isAuthenticated().then(setAuthed);
+    isAuthenticated()
+      .then(setAuthed)
+      .catch(() => setAuthed(false));
   }, []);
 
   const handleGenerate = async () => {
