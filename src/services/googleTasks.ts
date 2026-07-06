@@ -1,6 +1,8 @@
 import { getAccessToken } from './googleAuth';
 import { formatGoogleApiError, readGoogleApiError } from './googleApiError';
 import type { GoogleTaskList, ScheduleItem } from '../types';
+import { formatLocalDateString } from '../utils/date';
+import { isoToLocalTime, localTimeToIso } from '../utils/time';
 
 const TIME_PREFIX_RE = /^\[SA:(\d{2}:\d{2})(?:-(\d{2}:\d{2}))?\]\n?/;
 const DATE_ONLY_DUE_RE = /^(\d{4}-\d{2}-\d{2})T00:00:00(\.000)?Z?$/;
@@ -44,14 +46,7 @@ async function getTaskListId(category?: string, listId?: string): Promise<string
 function dueOnLocalDate(due: string, date: string): boolean {
   const d = new Date(due);
   if (Number.isNaN(d.getTime())) return false;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}` === date;
-}
-
-function timeToIso(date: string, time: string): string {
-  return new Date(`${date}T${time}:00`).toISOString();
+  return formatLocalDateString(d) === date;
 }
 
 export function parseTaskTimeFromNotes(
@@ -66,8 +61,8 @@ export function parseTaskTimeFromNotes(
   const detail = notes.replace(TIME_PREFIX_RE, '') || undefined;
   return {
     detail,
-    startTime: timeToIso(date, start),
-    endTime: end ? timeToIso(date, end) : undefined,
+    startTime: localTimeToIso(date, start),
+    endTime: end ? localTimeToIso(date, end) : undefined,
   };
 }
 
@@ -95,17 +90,11 @@ function buildTaskDue(date: string): string {
   return `${date}T00:00:00.000Z`;
 }
 
-function isoToTimeOnly(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 function buildTaskNotes(item: ScheduleItem): string | undefined {
   const detail = item.detail?.replace(TIME_PREFIX_RE, '').trim();
   if (item.startTime) {
-    const start = isoToTimeOnly(item.startTime);
-    const end = item.endTime ? isoToTimeOnly(item.endTime) : undefined;
+    const start = isoToLocalTime(item.startTime);
+    const end = item.endTime ? isoToLocalTime(item.endTime) : undefined;
     const prefix = end ? `[SA:${start}-${end}]` : `[SA:${start}]`;
     return detail ? `${prefix}\n${detail}` : prefix;
   }
@@ -135,9 +124,7 @@ function buildInsertPath(listId: string, parentId?: string, previousId?: string)
 
 export async function fetchTasks(date: string): Promise<ScheduleItem[]> {
   const lists = await fetchTaskLists();
-  const items: ScheduleItem[] = [];
-
-  for (const list of lists) {
+  const itemsByList = await Promise.all(lists.map(async (list) => {
     const res = await apiFetch(
       `/lists/${list.id}/tasks?showCompleted=true&showHidden=true`,
     );
@@ -146,10 +133,16 @@ export async function fetchTasks(date: string): Promise<ScheduleItem[]> {
       throw new Error(formatGoogleApiError(`Google Tasks API (${list.title})`, res.status, detail));
     }
     const data = await res.json();
-    for (const task of data.items ?? []) {
-      if (!task.due || !dueOnLocalDate(task.due, date)) continue;
+    return (data.items ?? []).flatMap((task: {
+      id: string;
+      title?: string;
+      due?: string;
+      notes?: string;
+      status?: string;
+    }) => {
+      if (!task.due || !dueOnLocalDate(task.due, date)) return [];
       const parsed = extractTaskSchedule(task.due, task.notes, date);
-      items.push({
+      return [{
         id: task.id,
         listId: list.id,
         title: task.title ?? '(無題)',
@@ -159,11 +152,11 @@ export async function fetchTasks(date: string): Promise<ScheduleItem[]> {
         source: 'task',
         category: list.title,
         status: task.status === 'completed' ? 'completed' : 'needsAction',
-      });
-    }
-  }
+      }];
+    });
+  }));
 
-  return items;
+  return itemsByList.flat();
 }
 
 export async function createTask(

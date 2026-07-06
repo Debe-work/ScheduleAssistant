@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ScheduleItem } from '../types';
+import {
+  compareScheduleItemsByStartTime,
+  groupDailyItems,
+  type IndexedScheduleItem,
+} from '../utils/scheduleItems';
+import { formatTime, isoToScheduleTimeParts, pad2, scheduleTimeToIso } from '../utils/time';
 
 type ScheduleTimelineProps = {
   items: ScheduleItem[];
@@ -14,53 +20,17 @@ type ScheduleTimelineProps = {
   onRowKeysChange?: (keys: string[]) => void;
 };
 
-type IndexedItem = { item: ScheduleItem; index: number };
-
 type ItemKind = 'calendar' | 'task' | 'daily';
 
 type TimelineRow = {
   item: ScheduleItem;
   kind: ItemKind;
   index?: number;
-  children: IndexedItem[];
+  children: IndexedScheduleItem[];
 };
 
 const HOUR_OPTIONS = Array.from({ length: 27 }, (_, hour) => hour);
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => minute);
-
-function pad2(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-function formatTime(iso?: string, scheduleDate?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  if (scheduleDate) {
-    const parts = isoToScheduleTimeParts(iso, scheduleDate);
-    if (parts) return `${pad2(parts.hour)}:${pad2(parts.minute)}`;
-  }
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-}
-
-function isoToScheduleTimeParts(
-  iso: string | undefined,
-  date: string,
-): { hour: number; minute: number } | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  const base = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(d.getTime()) || Number.isNaN(base.getTime())) return null;
-  const diffMinutes = Math.round((d.getTime() - base.getTime()) / 60_000);
-  const hour = Math.floor(diffMinutes / 60);
-  if (hour < 0 || hour > 26) return null;
-  return { hour, minute: ((diffMinutes % 60) + 60) % 60 };
-}
-
-function scheduleTimeToIso(date: string, hour: number, minute: number): string {
-  const base = new Date(`${date}T00:00:00`);
-  return new Date(base.getTime() + (hour * 60 + minute) * 60_000).toISOString();
-}
 
 function sourceLabel(kind: ItemKind, category?: string): string {
   switch (kind) {
@@ -84,35 +54,6 @@ function sourceBadgeClass(kind: ItemKind): string {
   }
 }
 
-function groupDailyItems(items: ScheduleItem[]): {
-  rows: IndexedItem[];
-  childrenByParent: Map<string, IndexedItem[]>;
-} {
-  const parentTitles = new Set(items.filter((i) => !i.parentName).map((i) => i.title));
-  const childrenByParent = new Map<string, IndexedItem[]>();
-  const rows: IndexedItem[] = [];
-
-  items.forEach((item, index) => {
-    if (item.parentName && parentTitles.has(item.parentName)) {
-      const list = childrenByParent.get(item.parentName) ?? [];
-      list.push({ item, index });
-      childrenByParent.set(item.parentName, list);
-    } else {
-      rows.push({ item, index });
-    }
-  });
-
-  for (const list of childrenByParent.values()) {
-    list.sort((a, b) => {
-      if (!a.item.startTime) return 1;
-      if (!b.item.startTime) return -1;
-      return new Date(a.item.startTime).getTime() - new Date(b.item.startTime).getTime();
-    });
-  }
-
-  return { rows, childrenByParent };
-}
-
 function buildTimelineRows(
   dailyItems: ScheduleItem[],
   calendarEvents: ScheduleItem[],
@@ -125,7 +66,7 @@ function buildTimelineRows(
       item,
       kind: 'calendar' as const,
       index,
-      children: [] as IndexedItem[],
+      children: [] as IndexedScheduleItem[],
     })),
     ...tasks
       .map((item, index) => ({ item, index }))
@@ -134,7 +75,7 @@ function buildTimelineRows(
         item,
         kind: 'task' as const,
         index,
-        children: [] as IndexedItem[],
+        children: [] as IndexedScheduleItem[],
       })),
     ...rows.map(({ item, index }) => ({
       item,
@@ -144,11 +85,7 @@ function buildTimelineRows(
     })),
   ];
 
-  return timeline.sort((a, b) => {
-    if (!a.item.startTime) return 1;
-    if (!b.item.startTime) return -1;
-    return new Date(a.item.startTime).getTime() - new Date(b.item.startTime).getTime();
-  });
+  return timeline.sort((a, b) => compareScheduleItemsByStartTime(a.item, b.item));
 }
 
 function rowKey(row: TimelineRow, idx: number): string {
@@ -267,7 +204,6 @@ function TimeEditor({ item, date, onUpdate }: TimeEditorProps) {
     </div>
   );
 }
-
 type ChildItemProps = {
   child: ScheduleItem;
   date: string;
@@ -512,7 +448,8 @@ export function ScheduleTimeline({
   const cardExpandedKeys = expandedCardKeys ?? internalExpandedCardKeys;
   const setCardExpandedKeys = onExpandedCardKeysChange ?? setInternalExpandedCardKeys;
 
-  const isCardExpanded = (key: string) => cardExpandedKeys.includes(key);
+  const cardExpandedKeySet = useMemo(() => new Set(cardExpandedKeys), [cardExpandedKeys]);
+  const isCardExpanded = (key: string) => cardExpandedKeySet.has(key);
 
   const rows = useMemo(
     () => buildTimelineRows(items, calendarEvents, tasks),
@@ -634,8 +571,4 @@ export function ScheduleTimeline({
       )}
     </div>
   );
-}
-
-export function areAllTimelineCardsExpanded(rowKeys: string[], expandedCardKeys: string[]): boolean {
-  return rowKeys.length > 0 && rowKeys.every((key) => expandedCardKeys.includes(key));
 }
