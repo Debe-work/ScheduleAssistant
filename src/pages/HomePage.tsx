@@ -54,7 +54,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="page">
+    <div className="page page-home">
       <h1>Schedule Assistant</h1>
       <p className="subtitle">デイリータスクを自動で割り振ります</p>
 

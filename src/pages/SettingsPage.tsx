@@ -23,7 +23,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="page">
+    <div className="page page-settings">
       <h1>設定</h1>
 
       <section>

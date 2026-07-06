@@ -210,7 +210,7 @@ export function hasTimeOverlap(a: ScheduleItem, b: ScheduleItem): boolean {
 
 export function findOverlaps(items: ScheduleItem[]): string[] {
   const warnings: string[] = [];
-  const timed = items.filter((i) => i.startTime && i.endTime);
+  const timed = items.filter((i) => i.startTime && i.endTime && !i.isAllDay);
   for (let i = 0; i < timed.length; i++) {
     for (let j = i + 1; j < timed.length; j++) {
       if (hasTimeOverlap(timed[i], timed[j])) {

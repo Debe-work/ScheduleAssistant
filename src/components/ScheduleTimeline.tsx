@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ScheduleItem } from '../types';
 
 type ScheduleTimelineProps = {
@@ -9,6 +9,9 @@ type ScheduleTimelineProps = {
   onItemsChange?: (items: ScheduleItem[]) => void;
   onTasksChange?: (tasks: ScheduleItem[]) => void;
   onCalendarChange?: (events: ScheduleItem[]) => void;
+  expandedCardKeys?: string[];
+  onExpandedCardKeysChange?: (keys: string[]) => void;
+  onRowKeysChange?: (keys: string[]) => void;
 };
 
 type IndexedItem = { item: ScheduleItem; index: number };
@@ -67,6 +70,17 @@ function sourceLabel(kind: ItemKind, category?: string): string {
       return category ? `Todo · ${category}` : 'Todo';
     case 'daily':
       return 'デイリー';
+  }
+}
+
+function sourceBadgeClass(kind: ItemKind): string {
+  switch (kind) {
+    case 'calendar':
+      return 'badge-source-calendar';
+    case 'task':
+      return 'badge-source-task';
+    case 'daily':
+      return 'badge-source-daily';
   }
 }
 
@@ -231,7 +245,7 @@ function TimeEditor({ item, date, onUpdate }: TimeEditorProps) {
   };
 
   return (
-    <div className="timeline-edit-times">
+    <div className="timeline-edit-times timeline-edit-times--stacked">
       <label className="timeline-edit-field">
         <span className="timeline-edit-label">開始</span>
         {renderTimeSelects(
@@ -256,13 +270,12 @@ function TimeEditor({ item, date, onUpdate }: TimeEditorProps) {
 
 type ChildItemProps = {
   child: ScheduleItem;
-  childIndex: number;
   date: string;
   onUpdate: (patch: Partial<ScheduleItem>) => void;
   onRemove: () => void;
 };
 
-function ChildItem({ child, childIndex, date, onUpdate, onRemove }: ChildItemProps) {
+function ChildItem({ child, date, onUpdate, onRemove }: ChildItemProps) {
   return (
     <li className="timeline-child-item">
       <div className="timeline-child-row">
@@ -299,8 +312,10 @@ type TimelineCardProps = {
   row: TimelineRow;
   rowId: string;
   date: string;
-  expanded: boolean;
-  onToggle: () => void;
+  cardExpanded: boolean;
+  onCardToggle: () => void;
+  childExpanded: boolean;
+  onChildToggle: () => void;
   onUpdateDaily: (index: number, patch: Partial<ScheduleItem>) => void;
   onUpdateTask: (index: number, patch: Partial<ScheduleItem>) => void;
   onUpdateCalendar: (index: number, patch: Partial<ScheduleItem>) => void;
@@ -311,8 +326,10 @@ function TimelineCard({
   row,
   rowId,
   date,
-  expanded,
-  onToggle,
+  cardExpanded,
+  onCardToggle,
+  childExpanded,
+  onChildToggle,
   onUpdateDaily,
   onUpdateTask,
   onUpdateCalendar,
@@ -324,6 +341,7 @@ function TimelineCard({
   const isAllDay = isCalendar && item.isAllDay;
   const editable = kind === 'daily' || kind === 'task' || isCalendar;
   const timeEditable = editable && !isAllDay;
+  const badgeClass = sourceBadgeClass(kind);
 
   const update = (patch: Partial<ScheduleItem>) => {
     if (index === undefined) {
@@ -336,108 +354,139 @@ function TimelineCard({
 
   return (
     <li
-      className={`timeline-item source-${item.source} timeline-item--editable`}
+      className={`timeline-item source-${item.source} timeline-item--editable${cardExpanded ? '' : ' timeline-item--collapsed'}`}
     >
       <div className="timeline-time-col">
         <span className="timeline-time">{formatTime(item.startTime, date)}</span>
         {item.endTime && <span className="timeline-time-end">{formatTime(item.endTime, date)}</span>}
       </div>
 
-      <div className="timeline-card">
-        <div className="timeline-card-top">
-          <span className={`badge badge-source badge-source-${kind === 'calendar' ? 'calendar' : kind === 'task' ? 'task' : 'daily'}`}>
-            {sourceLabel(kind, item.category)}
-            {isAllDay && <span className="badge badge-all-day">終日</span>}
-          </span>
-
-          {editable ? (
-            <label className="timeline-edit-field">
-              <span className="timeline-edit-label">名前</span>
-              <input
-                className="input input-sm"
-                value={item.title}
-                onChange={(e) => update({ title: e.target.value })}
-              />
-            </label>
-          ) : (
-            <strong className="timeline-title">{item.title}</strong>
-          )}
-
-          {editable ? (
-            <label className="timeline-edit-field">
-              <span className="timeline-edit-label">詳細</span>
-              <input
-                className="input input-sm"
-                value={item.detail ?? ''}
-                placeholder="（なし）"
-                onChange={(e) => update({ detail: e.target.value || undefined })}
-              />
-            </label>
-          ) : (
-            item.detail && <p className="detail">{item.detail}</p>
-          )}
-
-          {timeEditable && (
-            <div className="timeline-card-actions">
-              <TimeEditor item={item} date={date} onUpdate={update} />
-              {kind === 'daily' && index !== undefined && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm timeline-remove"
-                  onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
-                >
-                  削除
-                </button>
-              )}
-            </div>
-          )}
-
-          {kind === 'daily' && !timeEditable && index !== undefined && (
-            <div className="timeline-card-actions">
+      <div className={`timeline-card${cardExpanded ? '' : ' timeline-card--collapsed'}`}>
+        {!cardExpanded ? (
+          <button
+            type="button"
+            className="timeline-card-collapsed"
+            onClick={onCardToggle}
+            aria-expanded={false}
+            aria-label={`${item.title} を開く`}
+          >
+            <span className="timeline-card-collapsed-dot" aria-hidden />
+            <span className="timeline-card-collapsed-title">{item.title}</span>
+            {hasChildren && (
+              <span className="timeline-card-collapsed-meta">{children.length}件</span>
+            )}
+            <span className="accordion-chevron timeline-card-collapsed-chevron" aria-hidden>
+              ›
+            </span>
+          </button>
+        ) : (
+          <>
+            <div className="timeline-card-toolbar">
+              <span className={`badge ${badgeClass}`}>
+                {sourceLabel(kind, item.category)}
+                {isAllDay && <span className="badge badge-all-day">終日</span>}
+              </span>
               <button
                 type="button"
-                className="btn btn-ghost btn-sm timeline-remove"
-                onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
+                className="btn btn-ghost btn-sm timeline-card-close"
+                onClick={onCardToggle}
+                aria-label={`${item.title} を閉じる`}
               >
-                削除
+                閉じる
               </button>
             </div>
-          )}
-        </div>
 
-        {hasChildren && (
-          <>
-            <button
-              type="button"
-              className="timeline-accordion-bar"
-              onClick={onToggle}
-              aria-expanded={expanded}
-              aria-controls={`children-${rowId}`}
-            >
-              <span className={`accordion-chevron${expanded ? ' accordion-chevron--open' : ''}`} aria-hidden>
-                ›
-              </span>
-              <span className="timeline-accordion-label">子タスク {children.length}件</span>
-            </button>
-
-            <div
-              id={`children-${rowId}`}
-              className={`timeline-children${expanded ? ' timeline-children--open' : ''}`}
-              hidden={!expanded}
-            >
-              <ul className="timeline-child-list">
-                {children.map(({ item: child, index: childIndex }) => (
-                  <ChildItem
-                    key={`child-${childIndex}`}
-                    child={child}
-                    childIndex={childIndex}
-                    date={date}
-                    onUpdate={(patch) => onUpdateDaily(childIndex, patch)}
-                    onRemove={() => onRemoveDaily(childIndex)}
+            <div className="timeline-card-top">
+              {editable ? (
+                <label className="timeline-edit-field">
+                  <span className="timeline-edit-label">名前</span>
+                  <input
+                    className="input input-sm"
+                    value={item.title}
+                    onChange={(e) => update({ title: e.target.value })}
                   />
-                ))}
-              </ul>
+                </label>
+              ) : (
+                <strong className="timeline-title">{item.title}</strong>
+              )}
+
+              {editable ? (
+                <label className="timeline-edit-field">
+                  <span className="timeline-edit-label">詳細</span>
+                  <input
+                    className="input input-sm"
+                    value={item.detail ?? ''}
+                    placeholder="（なし）"
+                    onChange={(e) => update({ detail: e.target.value || undefined })}
+                  />
+                </label>
+              ) : (
+                item.detail && <p className="detail">{item.detail}</p>
+              )}
+
+              {timeEditable && (
+                <div className="timeline-card-actions">
+                  <TimeEditor item={item} date={date} onUpdate={update} />
+                  {kind === 'daily' && index !== undefined && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm timeline-remove"
+                      onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
+                    >
+                      削除
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {kind === 'daily' && !timeEditable && index !== undefined && (
+                <div className="timeline-card-actions">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm timeline-remove"
+                    onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
+                  >
+                    削除
+                  </button>
+                </div>
+              )}
             </div>
+
+            {hasChildren && (
+              <>
+                <button
+                  type="button"
+                  className="timeline-accordion-bar"
+                  onClick={onChildToggle}
+                  aria-expanded={childExpanded}
+                  aria-controls={`children-${rowId}`}
+                >
+                  <span className={`accordion-chevron${childExpanded ? ' accordion-chevron--open' : ''}`} aria-hidden>
+                    ›
+                  </span>
+                  <span className="timeline-accordion-label">子タスク</span>
+                  <span className="timeline-accordion-count">{children.length}件</span>
+                </button>
+
+                <div
+                  id={`children-${rowId}`}
+                  className={`timeline-children${childExpanded ? ' timeline-children--open' : ''}`}
+                  hidden={!childExpanded}
+                >
+                  <ul className="timeline-child-list">
+                    {children.map(({ item: child, index: childIndex }) => (
+                      <ChildItem
+                        key={`child-${childIndex}`}
+                        child={child}
+                        date={date}
+                        onUpdate={(patch) => onUpdateDaily(childIndex, patch)}
+                        onRemove={() => onRemoveDaily(childIndex)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -453,13 +502,28 @@ export function ScheduleTimeline({
   onItemsChange,
   onTasksChange,
   onCalendarChange,
+  expandedCardKeys,
+  onExpandedCardKeysChange,
+  onRowKeysChange,
 }: ScheduleTimelineProps) {
-  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [internalExpandedCardKeys, setInternalExpandedCardKeys] = useState<string[]>([]);
+  const [childExpandedKeys, setChildExpandedKeys] = useState<Set<string>>(new Set());
+
+  const cardExpandedKeys = expandedCardKeys ?? internalExpandedCardKeys;
+  const setCardExpandedKeys = onExpandedCardKeysChange ?? setInternalExpandedCardKeys;
+
+  const isCardExpanded = (key: string) => cardExpandedKeys.includes(key);
 
   const rows = useMemo(
     () => buildTimelineRows(items, calendarEvents, tasks),
     [items, calendarEvents, tasks],
   );
+
+  const rowKeys = useMemo(() => rows.map((row, idx) => rowKey(row, idx)), [rows]);
+
+  useEffect(() => {
+    onRowKeysChange?.(rowKeys);
+  }, [rowKeys, onRowKeysChange]);
 
   const updateDaily = (index: number, patch: Partial<ScheduleItem>) => {
     if (!onItemsChange) return;
@@ -497,6 +561,7 @@ export function ScheduleTimeline({
 
   const addDaily = () => {
     if (!onItemsChange) return;
+    const newIndex = items.length;
     onItemsChange([
       ...items,
       {
@@ -506,10 +571,19 @@ export function ScheduleTimeline({
         status: 'needsAction',
       },
     ]);
+    setCardExpandedKeys([...cardExpandedKeys, `daily-${newIndex}`]);
   };
 
-  const toggle = (key: string) => {
-    setExpandedKeys((prev) => {
+  const toggleCard = (key: string) => {
+    setCardExpandedKeys(
+      isCardExpanded(key)
+        ? cardExpandedKeys.filter((entry) => entry !== key)
+        : [...cardExpandedKeys, key],
+    );
+  };
+
+  const toggleChild = (key: string) => {
+    setChildExpandedKeys((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -541,8 +615,10 @@ export function ScheduleTimeline({
               row={row}
               rowId={key}
               date={date}
-              expanded={expandedKeys.has(key)}
-              onToggle={() => toggle(key)}
+              cardExpanded={isCardExpanded(key)}
+              onCardToggle={() => toggleCard(key)}
+              childExpanded={childExpandedKeys.has(key)}
+              onChildToggle={() => toggleChild(key)}
               onUpdateDaily={updateDaily}
               onUpdateTask={updateTask}
               onUpdateCalendar={updateCalendar}
@@ -558,4 +634,8 @@ export function ScheduleTimeline({
       )}
     </div>
   );
+}
+
+export function areAllTimelineCardsExpanded(rowKeys: string[], expandedCardKeys: string[]): boolean {
+  return rowKeys.length > 0 && rowKeys.every((key) => expandedCardKeys.includes(key));
 }
