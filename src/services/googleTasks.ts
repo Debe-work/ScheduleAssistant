@@ -91,7 +91,7 @@ export function extractTaskSchedule(
   };
 }
 
-function buildTaskDue(item: ScheduleItem, date: string): string {
+function buildTaskDue(date: string): string {
   return `${date}T00:00:00.000Z`;
 }
 
@@ -115,7 +115,7 @@ function buildTaskNotes(item: ScheduleItem): string | undefined {
 function buildTaskBody(item: ScheduleItem, date: string): Record<string, string> {
   const body: Record<string, string> = {
     title: item.title,
-    due: buildTaskDue(item, date),
+    due: buildTaskDue(date),
   };
   const notes = buildTaskNotes(item);
   body.notes = notes ?? '';
