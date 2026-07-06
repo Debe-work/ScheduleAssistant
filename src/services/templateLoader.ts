@@ -1,3 +1,4 @@
+import { loadStoredTemplates } from '../storage/templateStorage';
 import type { DailyTaskTemplate } from '../types';
 
 async function loadLocalTemplate(): Promise<string> {
@@ -19,8 +20,14 @@ async function parseTemplate(yamlText: string): Promise<DailyTaskTemplate[]> {
   return parsed.tasks;
 }
 
-export async function loadTemplates(): Promise<DailyTaskTemplate[]> {
+export async function loadDefaultTemplates(): Promise<DailyTaskTemplate[]> {
   const markdown = await loadLocalTemplate();
   const yamlText = extractYamlFromMarkdown(markdown);
   return parseTemplate(yamlText);
+}
+
+export async function loadTemplates(): Promise<DailyTaskTemplate[]> {
+  const stored = loadStoredTemplates();
+  if (stored) return stored;
+  return loadDefaultTemplates();
 }
