@@ -112,13 +112,13 @@ wrangler secret put APP_ORIGINS --config worker/wrangler.jsonc
 yarn worker:deploy
 ```
 
-`main` / `master` への push 時は `.github/workflows/deploy-worker.yml` からも自動デプロイされます（デプロイ前に `yarn worker:typecheck` を実行）。
+GitHub Actions からデプロイする場合は、必要な secrets を設定した後に `.github/workflows/deploy-worker.yml` を手動実行してください（デプロイ前に `yarn worker:typecheck` を実行）。
 
 ## デプロイ
 
 ### Frontend
 
-GitHub Actions（`.github/workflows/deploy.yml`）で GitHub Pages に自動デプロイします。`main` / `master` への push がトリガーです。
+GitHub Actions（`.github/workflows/deploy.yml`）で GitHub Pages にデプロイします。push では実行されないため、必要な GitHub Actions secrets を設定した後に手動実行してください。
 
 `GITHUB_PAGES=true` ビルド時の base path は `/ScheduleAssistant/` です。本番 URL は `https://<your-github-user>.github.io/ScheduleAssistant/` になります。
 
