@@ -43,6 +43,7 @@ type ScheduleItem = {
   parentName?: string;
   status?: 'needsAction' | 'completed';
   defaultComplete?: boolean;
+  isAllDay?: boolean;
 };
 
 type GeneratedSchedule = {
@@ -370,6 +371,7 @@ function validateScheduleItem(value: unknown): ScheduleItem {
     parentName: optionalString(value.parentName),
     status: isTaskStatus(value.status) ? value.status : undefined,
     defaultComplete: optionalBoolean(value.defaultComplete),
+    isAllDay: optionalBoolean(value.isAllDay),
   };
 }
 
@@ -525,6 +527,7 @@ async function callGemini(
 
 function buildSchedulePrompt(params: GenerateScheduleRequest): string {
   const { date, invokedAt, calendarEvents, tasks, templates, timeZone } = params;
+  const timedCalendarEvents = calendarEvents.filter((event) => !event.isAllDay);
 
   return `あなたは個人のデイリースケジュール調整アシスタントです。
 登録日 ${date} のデイリータスクを、既存予定とテンプレートに基づいてスケジュールしてください。
@@ -533,22 +536,23 @@ function buildSchedulePrompt(params: GenerateScheduleRequest): string {
 
 1. テンプレートの \`condition\` を登録日・曜日で評価し、該当するタスクのみ登録する
 2. \`startTime\` は **他の予定・タスクがない場合のデフォルト配置時刻（目安）** である
-3. 当日に既存の Calendar 予定や Todo がある場合、衝突を避け **空き時間にずらして** 配置する
-4. \`endTime\` が相対指定（例: 開始から40分後）の場合、開始がずれても相対関係を維持する
-5. 曜日分岐（例: 月曜は6:30, それ以外は7:30）は登録日からデフォルト時刻を決定してから、ずらしルールを適用
-6. 親タスクの \`children\` は親の時間枠内で順序どおりに配置する
-7. \`defaultComplete: true\` のタスクは status を completed にする
-8. ずらした場合は summary に理由を記載する
-9. 時刻は ISO 8601 形式（タイムゾーン: ${timeZone}）で返す
+3. 当日に既存の Calendar 予定（**終日予定を除く**）や Todo がある場合、衝突を避け **空き時間にずらして** 配置する
+4. **終日（isAllDay）の Calendar 予定は時刻調整の対象外** とし、存在を無視して空き時間の計算に含めない
+5. \`endTime\` が相対指定（例: 開始から40分後）の場合、開始がずれても相対関係を維持する
+6. 曜日分岐（例: 月曜は6:30, それ以外は7:30）は登録日からデフォルト時刻を決定してから、ずらしルールを適用
+7. 親タスクの \`children\` は親の時間枠内で順序どおりに配置する
+8. \`defaultComplete: true\` のタスクは status を completed にする
+9. ずらした場合は summary に理由を記載する
+10. 時刻は ISO 8601 形式（タイムゾーン: ${timeZone}）で返す
 
 ## コンテキスト
 
 - アプリ起動時刻: ${invokedAt}
 - 登録日: ${date}
 
-## 既存 Calendar 予定
+## 既存 Calendar 予定（時刻調整の対象・終日予定は除外済み）
 
-${JSON.stringify(calendarEvents, null, 2)}
+${JSON.stringify(timedCalendarEvents, null, 2)}
 
 ## 既存 Todo
 

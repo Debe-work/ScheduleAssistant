@@ -1,15 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ScheduleTimeline } from '../components/ScheduleTimeline';
+import { HelpHint } from '../components/HelpHint';
+import { areAllTimelineCardsExpanded, ScheduleTimeline } from '../components/ScheduleTimeline';
 import { loadScheduleDraft, saveScheduleDraft, type ScheduleDraft } from '../storage/scheduleDraft';
 import { registerSchedule } from '../services/scheduleRegister';
 import type { GeneratedSchedule } from '../types';
+import { formatScheduleDateLabel, parseScheduleDateParts } from '../utils/date';
+import { splitJapaneseSentences } from '../utils/text';
 
 export function PreviewPage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ScheduleDraft | null>(null);
   const [registering, setRegistering] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [expandedCardKeys, setExpandedCardKeys] = useState<string[]>([]);
+  const [rowKeys, setRowKeys] = useState<string[]>([]);
+
+  const allCardsExpanded = areAllTimelineCardsExpanded(rowKeys, expandedCardKeys);
+
+  const handleToggleAllCards = () => {
+    setExpandedCardKeys(allCardsExpanded ? [] : [...rowKeys]);
+  };
 
   useEffect(() => {
     const loaded = loadScheduleDraft();
@@ -75,22 +86,75 @@ export function PreviewPage() {
 
   if (!draft) return <p className="loading">読み込み中…</p>;
 
-  return (
-    <div className="page">
-      <h1>プレビュー</h1>
-      {draft.schedule.summary && <p className="summary">{draft.schedule.summary}</p>}
+  const dateParts = parseScheduleDateParts(draft.schedule.date);
 
-      <section>
-        <h2>スケジュール</h2>
-        <p className="section-hint">
-          デイリータスク・Google Todo・カレンダーの取得項目を編集できます。終日予定は日付のみのため時刻は編集できません。
-          登録時は時刻把握用に専用カレンダーへ予定を作り、Todo 操作用に Google Todo も作成・更新します。
-        </p>
+  return (
+    <div className="page page-preview">
+      <header className="preview-header">
+        <div className="preview-header-card">
+          <div className="preview-header-glow" aria-hidden="true" />
+          <div className="preview-header-top">
+            <span className="preview-header-badge">Preview</span>
+            {dateParts && <span className="preview-header-weekday">{dateParts.weekdayLong}</span>}
+          </div>
+          {dateParts ? (
+            <div className="preview-header-date" aria-label={formatScheduleDateLabel(draft.schedule.date)}>
+              <span className="preview-header-date-main">
+                <span className="preview-header-date-num">{dateParts.month}</span>
+                <span className="preview-header-date-unit">月</span>
+                <span className="preview-header-date-num">{dateParts.day}</span>
+                <span className="preview-header-date-unit">日</span>
+              </span>
+              <span className="preview-header-year">{dateParts.year}</span>
+            </div>
+          ) : (
+            <h1 className="preview-header-fallback">{draft.schedule.date}</h1>
+          )}
+          <p className="preview-header-caption">生成結果を確認してから登録</p>
+        </div>
+      </header>
+
+      {draft.schedule.summary && (
+        <div className="preview-summary">
+          <p className="preview-summary-label">AI からの提案</p>
+          <div className="preview-summary-body">
+            {splitJapaneseSentences(draft.schedule.summary).map((sentence) => (
+              <p key={sentence} className="preview-summary-sentence">
+                {sentence}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <section className="preview-schedule-section">
+        <div className="section-heading-row">
+          <h2>スケジュール</h2>
+          <div className="section-heading-actions">
+            {rowKeys.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm section-bulk-toggle"
+                onClick={handleToggleAllCards}
+              >
+                {allCardsExpanded ? 'すべて閉じる' : 'すべて開く'}
+              </button>
+            )}
+            <HelpHint label="スケジュール編集のヒント">
+              <p>デイリータスク・Google Todo・カレンダーの取得項目を編集できます。</p>
+              <p>終日予定は日付のみのため、時刻は編集できません。</p>
+              <p>登録時は時刻把握用に専用カレンダーへ予定を作り、Todo 操作用に Google Todo も作成・更新します。</p>
+            </HelpHint>
+          </div>
+        </div>
         <ScheduleTimeline
           items={draft.schedule.items}
           calendarEvents={draft.calendarEvents}
           tasks={draft.tasks}
           date={draft.schedule.date}
+          expandedCardKeys={expandedCardKeys}
+          onExpandedCardKeysChange={setExpandedCardKeys}
+          onRowKeysChange={setRowKeys}
           onItemsChange={handleItemsChange}
           onTasksChange={handleTasksChange}
           onCalendarChange={handleCalendarChange}
