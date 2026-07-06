@@ -1,47 +1,561 @@
+import { useMemo, useState } from 'react';
 import type { ScheduleItem } from '../types';
 
 type ScheduleTimelineProps = {
   items: ScheduleItem[];
-  existingItems?: ScheduleItem[];
+  calendarEvents?: ScheduleItem[];
+  tasks?: ScheduleItem[];
+  date: string;
+  onItemsChange?: (items: ScheduleItem[]) => void;
+  onTasksChange?: (tasks: ScheduleItem[]) => void;
+  onCalendarChange?: (events: ScheduleItem[]) => void;
 };
 
-function formatTime(iso?: string): string {
+type IndexedItem = { item: ScheduleItem; index: number };
+
+type ItemKind = 'calendar' | 'task' | 'daily';
+
+type TimelineRow = {
+  item: ScheduleItem;
+  kind: ItemKind;
+  index?: number;
+  children: IndexedItem[];
+};
+
+const HOUR_OPTIONS = Array.from({ length: 27 }, (_, hour) => hour);
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => minute);
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function formatTime(iso?: string, scheduleDate?: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
+  if (scheduleDate) {
+    const parts = isoToScheduleTimeParts(iso, scheduleDate);
+    if (parts) return `${pad2(parts.hour)}:${pad2(parts.minute)}`;
+  }
   return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function ScheduleTimeline({ items, existingItems = [] }: ScheduleTimelineProps) {
-  const all = [
-    ...existingItems.map((i) => ({ ...i, readonly: true })),
-    ...items.map((i) => ({ ...i, readonly: false })),
-  ].sort((a, b) => {
-    if (!a.startTime) return 1;
-    if (!b.startTime) return -1;
-    return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+function isoToScheduleTimeParts(
+  iso: string | undefined,
+  date: string,
+): { hour: number; minute: number } | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const base = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime()) || Number.isNaN(base.getTime())) return null;
+  const diffMinutes = Math.round((d.getTime() - base.getTime()) / 60_000);
+  const hour = Math.floor(diffMinutes / 60);
+  if (hour < 0 || hour > 26) return null;
+  return { hour, minute: ((diffMinutes % 60) + 60) % 60 };
+}
+
+function scheduleTimeToIso(date: string, hour: number, minute: number): string {
+  const base = new Date(`${date}T00:00:00`);
+  return new Date(base.getTime() + (hour * 60 + minute) * 60_000).toISOString();
+}
+
+function sourceLabel(kind: ItemKind, category?: string): string {
+  switch (kind) {
+    case 'calendar':
+      return 'カレンダー';
+    case 'task':
+      return category ? `Todo · ${category}` : 'Todo';
+    case 'daily':
+      return 'デイリー';
+  }
+}
+
+function groupDailyItems(items: ScheduleItem[]): {
+  rows: IndexedItem[];
+  childrenByParent: Map<string, IndexedItem[]>;
+} {
+  const parentTitles = new Set(items.filter((i) => !i.parentName).map((i) => i.title));
+  const childrenByParent = new Map<string, IndexedItem[]>();
+  const rows: IndexedItem[] = [];
+
+  items.forEach((item, index) => {
+    if (item.parentName && parentTitles.has(item.parentName)) {
+      const list = childrenByParent.get(item.parentName) ?? [];
+      list.push({ item, index });
+      childrenByParent.set(item.parentName, list);
+    } else {
+      rows.push({ item, index });
+    }
   });
 
-  if (all.length === 0) {
-    return <p className="empty">予定がありません</p>;
+  for (const list of childrenByParent.values()) {
+    list.sort((a, b) => {
+      if (!a.item.startTime) return 1;
+      if (!b.item.startTime) return -1;
+      return new Date(a.item.startTime).getTime() - new Date(b.item.startTime).getTime();
+    });
+  }
+
+  return { rows, childrenByParent };
+}
+
+function buildTimelineRows(
+  dailyItems: ScheduleItem[],
+  calendarEvents: ScheduleItem[],
+  tasks: ScheduleItem[],
+): TimelineRow[] {
+  const { rows, childrenByParent } = groupDailyItems(dailyItems);
+
+  const timeline: TimelineRow[] = [
+    ...calendarEvents.map((item, index) => ({
+      item,
+      kind: 'calendar' as const,
+      index,
+      children: [] as IndexedItem[],
+    })),
+    ...tasks
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.status !== 'completed')
+      .map(({ item, index }) => ({
+        item,
+        kind: 'task' as const,
+        index,
+        children: [] as IndexedItem[],
+      })),
+    ...rows.map(({ item, index }) => ({
+      item,
+      kind: 'daily' as const,
+      index,
+      children: childrenByParent.get(item.title) ?? [],
+    })),
+  ];
+
+  return timeline.sort((a, b) => {
+    if (!a.item.startTime) return 1;
+    if (!b.item.startTime) return -1;
+    return new Date(a.item.startTime).getTime() - new Date(b.item.startTime).getTime();
+  });
+}
+
+function rowKey(row: TimelineRow, idx: number): string {
+  const id = row.item.id ?? row.index ?? idx;
+  return `${row.kind}-${id}`;
+}
+
+type TimeEditorProps = {
+  item: ScheduleItem;
+  date: string;
+  onUpdate: (patch: Partial<ScheduleItem>) => void;
+};
+
+function TimeEditor({ item, date, onUpdate }: TimeEditorProps) {
+  const startParts = isoToScheduleTimeParts(item.startTime, date);
+  const endParts = isoToScheduleTimeParts(item.endTime, date);
+
+  const updateStartTime = (hourValue: string, minuteValue: string) => {
+    const nextStartTime = hourValue === ''
+      ? undefined
+      : scheduleTimeToIso(date, Number(hourValue), minuteValue === '' ? 0 : Number(minuteValue));
+    const patch: Partial<ScheduleItem> = { startTime: nextStartTime };
+    if (item.startTime && item.endTime && nextStartTime) {
+      const diff = new Date(nextStartTime).getTime() - new Date(item.startTime).getTime();
+      const endTime = new Date(item.endTime);
+      if (!Number.isNaN(diff) && !Number.isNaN(endTime.getTime())) {
+        patch.endTime = new Date(endTime.getTime() + diff).toISOString();
+      }
+    }
+    onUpdate(patch);
+  };
+
+  const updateEndTime = (hourValue: string, minuteValue: string) => {
+    onUpdate({
+      endTime: hourValue === ''
+        ? undefined
+        : scheduleTimeToIso(date, Number(hourValue), minuteValue === '' ? 0 : Number(minuteValue)),
+    });
+  };
+
+  const renderTimeSelects = (
+    parts: { hour: number; minute: number } | null,
+    onChange: (hourValue: string, minuteValue: string) => void,
+    clearLabel: string,
+    onClear: () => void,
+  ) => {
+    const hourValue = parts ? String(parts.hour) : '';
+    const minuteValue = parts ? String(parts.minute) : '';
+    return (
+      <div className="timeline-time-input-wrap">
+        <div className="timeline-time-selects">
+          <select
+            className="input input-sm timeline-time-select"
+            value={hourValue}
+            onChange={(e) => onChange(e.target.value, minuteValue)}
+            aria-label="時"
+          >
+            <option value="">--</option>
+            {HOUR_OPTIONS.map((hour) => (
+              <option key={hour} value={hour}>
+                {hour}
+              </option>
+            ))}
+          </select>
+          <span className="timeline-time-separator">:</span>
+          <select
+            className="input input-sm timeline-time-select"
+            value={minuteValue}
+            onChange={(e) => onChange(hourValue, e.target.value)}
+            disabled={hourValue === ''}
+            aria-label="分"
+          >
+            <option value="">--</option>
+            {MINUTE_OPTIONS.map((minute) => (
+              <option key={minute} value={minute}>
+                {pad2(minute)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {parts && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm timeline-time-clear"
+            onClick={onClear}
+            aria-label={clearLabel}
+            title="クリア"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="timeline-edit-times">
+      <label className="timeline-edit-field">
+        <span className="timeline-edit-label">開始</span>
+        {renderTimeSelects(
+          startParts,
+          updateStartTime,
+          '開始時刻をクリア',
+          () => onUpdate({ startTime: undefined }),
+        )}
+      </label>
+      <label className="timeline-edit-field">
+        <span className="timeline-edit-label">終了</span>
+        {renderTimeSelects(
+          endParts,
+          updateEndTime,
+          '終了時刻をクリア',
+          () => onUpdate({ endTime: undefined }),
+        )}
+      </label>
+    </div>
+  );
+}
+
+type ChildItemProps = {
+  child: ScheduleItem;
+  childIndex: number;
+  date: string;
+  onUpdate: (patch: Partial<ScheduleItem>) => void;
+  onRemove: () => void;
+};
+
+function ChildItem({ child, childIndex, date, onUpdate, onRemove }: ChildItemProps) {
+  return (
+    <li className="timeline-child-item">
+      <div className="timeline-child-row">
+        <span className="timeline-child-time-col">
+          {formatTime(child.startTime, date)}
+          {child.endTime && (
+            <>
+              <span className="timeline-child-time-sep">–</span>
+              {formatTime(child.endTime, date)}
+            </>
+          )}
+        </span>
+        <label className="timeline-edit-field timeline-edit-field--grow">
+          <span className="timeline-edit-label">名前</span>
+          <input
+            className="input input-sm"
+            value={child.title}
+            onChange={(e) => onUpdate({ title: e.target.value })}
+          />
+        </label>
+      </div>
+      {child.detail && <p className="timeline-child-detail">{child.detail}</p>}
+      <div className="timeline-child-actions">
+        <TimeEditor item={child} date={date} onUpdate={onUpdate} />
+        <button type="button" className="btn btn-ghost btn-sm timeline-remove" onClick={onRemove}>
+          削除
+        </button>
+      </div>
+    </li>
+  );
+}
+
+type TimelineCardProps = {
+  row: TimelineRow;
+  rowId: string;
+  date: string;
+  expanded: boolean;
+  onToggle: () => void;
+  onUpdateDaily: (index: number, patch: Partial<ScheduleItem>) => void;
+  onUpdateTask: (index: number, patch: Partial<ScheduleItem>) => void;
+  onUpdateCalendar: (index: number, patch: Partial<ScheduleItem>) => void;
+  onRemoveDaily: (index: number, childIndexes?: number[]) => void;
+};
+
+function TimelineCard({
+  row,
+  rowId,
+  date,
+  expanded,
+  onToggle,
+  onUpdateDaily,
+  onUpdateTask,
+  onUpdateCalendar,
+  onRemoveDaily,
+}: TimelineCardProps) {
+  const { item, kind, index, children } = row;
+  const hasChildren = children.length > 0;
+  const isCalendar = kind === 'calendar';
+  const isAllDay = isCalendar && item.isAllDay;
+  const editable = kind === 'daily' || kind === 'task' || isCalendar;
+  const timeEditable = editable && !isAllDay;
+
+  const update = (patch: Partial<ScheduleItem>) => {
+    if (index === undefined) {
+      return;
+    }
+    if (kind === 'daily') onUpdateDaily(index, patch);
+    else if (kind === 'task') onUpdateTask(index, patch);
+    else if (kind === 'calendar') onUpdateCalendar(index, patch);
+  };
+
+  return (
+    <li
+      className={`timeline-item source-${item.source} timeline-item--editable`}
+    >
+      <div className="timeline-time-col">
+        <span className="timeline-time">{formatTime(item.startTime, date)}</span>
+        {item.endTime && <span className="timeline-time-end">{formatTime(item.endTime, date)}</span>}
+      </div>
+
+      <div className="timeline-card">
+        <div className="timeline-card-top">
+          <span className={`badge badge-source badge-source-${kind === 'calendar' ? 'calendar' : kind === 'task' ? 'task' : 'daily'}`}>
+            {sourceLabel(kind, item.category)}
+            {isAllDay && <span className="badge badge-all-day">終日</span>}
+          </span>
+
+          {editable ? (
+            <label className="timeline-edit-field">
+              <span className="timeline-edit-label">名前</span>
+              <input
+                className="input input-sm"
+                value={item.title}
+                onChange={(e) => update({ title: e.target.value })}
+              />
+            </label>
+          ) : (
+            <strong className="timeline-title">{item.title}</strong>
+          )}
+
+          {editable ? (
+            <label className="timeline-edit-field">
+              <span className="timeline-edit-label">詳細</span>
+              <input
+                className="input input-sm"
+                value={item.detail ?? ''}
+                placeholder="（なし）"
+                onChange={(e) => update({ detail: e.target.value || undefined })}
+              />
+            </label>
+          ) : (
+            item.detail && <p className="detail">{item.detail}</p>
+          )}
+
+          {timeEditable && (
+            <div className="timeline-card-actions">
+              <TimeEditor item={item} date={date} onUpdate={update} />
+              {kind === 'daily' && index !== undefined && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm timeline-remove"
+                  onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
+                >
+                  削除
+                </button>
+              )}
+            </div>
+          )}
+
+          {kind === 'daily' && !timeEditable && index !== undefined && (
+            <div className="timeline-card-actions">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm timeline-remove"
+                onClick={() => onRemoveDaily(index, children.map((child) => child.index))}
+              >
+                削除
+              </button>
+            </div>
+          )}
+        </div>
+
+        {hasChildren && (
+          <>
+            <button
+              type="button"
+              className="timeline-accordion-bar"
+              onClick={onToggle}
+              aria-expanded={expanded}
+              aria-controls={`children-${rowId}`}
+            >
+              <span className={`accordion-chevron${expanded ? ' accordion-chevron--open' : ''}`} aria-hidden>
+                ›
+              </span>
+              <span className="timeline-accordion-label">子タスク {children.length}件</span>
+            </button>
+
+            <div
+              id={`children-${rowId}`}
+              className={`timeline-children${expanded ? ' timeline-children--open' : ''}`}
+              hidden={!expanded}
+            >
+              <ul className="timeline-child-list">
+                {children.map(({ item: child, index: childIndex }) => (
+                  <ChildItem
+                    key={`child-${childIndex}`}
+                    child={child}
+                    childIndex={childIndex}
+                    date={date}
+                    onUpdate={(patch) => onUpdateDaily(childIndex, patch)}
+                    onRemove={() => onRemoveDaily(childIndex)}
+                  />
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </li>
+  );
+}
+
+export function ScheduleTimeline({
+  items,
+  calendarEvents = [],
+  tasks = [],
+  date,
+  onItemsChange,
+  onTasksChange,
+  onCalendarChange,
+}: ScheduleTimelineProps) {
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+
+  const rows = useMemo(
+    () => buildTimelineRows(items, calendarEvents, tasks),
+    [items, calendarEvents, tasks],
+  );
+
+  const updateDaily = (index: number, patch: Partial<ScheduleItem>) => {
+    if (!onItemsChange) return;
+    const oldTitle = items[index]?.title;
+    const newTitle = patch.title;
+    onItemsChange(
+      items.map((item, i) => {
+        if (i === index) return { ...item, ...patch };
+        if (newTitle && oldTitle && item.parentName === oldTitle) {
+          return { ...item, parentName: newTitle };
+        }
+        return item;
+      }),
+    );
+  };
+
+  const updateTask = (index: number, patch: Partial<ScheduleItem>) => {
+    if (!onTasksChange) return;
+    onTasksChange(tasks.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  };
+
+  const updateCalendar = (index: number, patch: Partial<ScheduleItem>) => {
+    if (!onCalendarChange) return;
+    onCalendarChange(calendarEvents.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  };
+
+  const removeDaily = (index: number, childIndexes: number[] = []) => {
+    if (!onItemsChange) return;
+    const removed = items[index];
+    const removeIndexes = new Set([index, ...childIndexes]);
+    onItemsChange(
+      items.filter((item, i) => !removeIndexes.has(i) && (!removed || item.parentName !== removed.title)),
+    );
+  };
+
+  const addDaily = () => {
+    if (!onItemsChange) return;
+    onItemsChange([
+      ...items,
+      {
+        title: '新規タスク',
+        source: 'daily',
+        category: 'DailyTask',
+        status: 'needsAction',
+      },
+    ]);
+  };
+
+  const toggle = (key: string) => {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  if (rows.length === 0) {
+    return (
+      <div className="timeline-empty">
+        <p className="empty">予定がありません</p>
+        {onItemsChange && (
+          <button type="button" className="btn btn-secondary" onClick={addDaily}>
+            タスクを追加
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
-    <ul className="timeline">
-      {all.map((item, idx) => (
-        <li key={`${item.title}-${idx}`} className={`timeline-item source-${item.source}`}>
-          <div className="timeline-time">
-            {formatTime(item.startTime)}
-            {item.endTime && ` – ${formatTime(item.endTime)}`}
-          </div>
-          <div className="timeline-body">
-            <strong>{item.title}</strong>
-            {item.detail && <p className="detail">{item.detail}</p>}
-            <span className="badge">{item.source}</span>
-            {item.parentName && <span className="badge">↳ {item.parentName}</span>}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div className="timeline-wrap">
+      <ul className="timeline">
+        {rows.map((row, idx) => {
+          const key = rowKey(row, idx);
+          return (
+            <TimelineCard
+              key={key}
+              row={row}
+              rowId={key}
+              date={date}
+              expanded={expandedKeys.has(key)}
+              onToggle={() => toggle(key)}
+              onUpdateDaily={updateDaily}
+              onUpdateTask={updateTask}
+              onUpdateCalendar={updateCalendar}
+              onRemoveDaily={removeDaily}
+            />
+          );
+        })}
+      </ul>
+      {onItemsChange && (
+        <button type="button" className="btn btn-secondary btn-block timeline-add" onClick={addDaily}>
+          デイリータスクを追加
+        </button>
+      )}
+    </div>
   );
 }

@@ -11,6 +11,7 @@ export type DailyTaskTemplate = {
 
 export type ScheduleItem = {
   id?: string;
+  listId?: string;
   title: string;
   detail?: string;
   startTime?: string;
@@ -20,12 +21,20 @@ export type ScheduleItem = {
   parentName?: string;
   status?: 'needsAction' | 'completed';
   defaultComplete?: boolean;
+  isAllDay?: boolean;
 };
 
 export type GeneratedSchedule = {
   date: string;
   items: ScheduleItem[];
   summary: string;
+  taskSchedules?: TaskSchedule[];
+};
+
+export type TaskSchedule = {
+  title: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 export type GoogleTaskList = {

@@ -1,6 +1,7 @@
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
+const GEMINI_GENERATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/tasks',
@@ -17,6 +18,53 @@ type Env = {
   SESSION_SECRET: string;
   TOKEN_ENCRYPTION_KEY: string;
   APP_ORIGINS: string;
+  GEMINI_API_KEY: string;
+};
+
+type DailyTaskTemplate = {
+  name: string;
+  condition?: string;
+  category?: string;
+  detail?: string;
+  startTime?: string;
+  endTime?: string;
+  defaultComplete?: boolean;
+  children?: Omit<DailyTaskTemplate, 'category' | 'children'>[];
+};
+
+type ScheduleItem = {
+  id?: string;
+  title: string;
+  detail?: string;
+  startTime?: string;
+  endTime?: string;
+  source: 'calendar' | 'task' | 'daily';
+  category?: string;
+  parentName?: string;
+  status?: 'needsAction' | 'completed';
+  defaultComplete?: boolean;
+};
+
+type GeneratedSchedule = {
+  date: string;
+  items: ScheduleItem[];
+  summary: string;
+  taskSchedules?: TaskSchedule[];
+};
+
+type TaskSchedule = {
+  title: string;
+  startTime?: string;
+  endTime?: string;
+};
+
+type GenerateScheduleRequest = {
+  date: string;
+  invokedAt: string;
+  calendarEvents: ScheduleItem[];
+  tasks: ScheduleItem[];
+  templates: DailyTaskTemplate[];
+  timeZone: string;
 };
 
 type AuthTransaction = {
@@ -52,6 +100,14 @@ type OAuthTokenResponse = {
   refresh_token?: string;
 };
 
+type GeminiResponse = {
+  candidates?: {
+    content?: {
+      parts?: { text?: string }[];
+    };
+  }[];
+};
+
 type ResolvedSession =
   | { sessionId: string; session: SessionRecord }
   | { sessionId: null; session: null; clearCookie: boolean };
@@ -60,7 +116,10 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    if (request.method === 'OPTIONS' && url.pathname.startsWith('/api/google/')) {
+    if (
+      request.method === 'OPTIONS'
+      && (url.pathname.startsWith('/api/google/') || url.pathname.startsWith('/api/gemini/'))
+    ) {
       return new Response(null, {
         status: 204,
         headers: buildCorsHeaders(request, env),
@@ -69,12 +128,7 @@ export default {
 
     try {
       if (request.method === 'GET' && url.pathname === '/api/google/health') {
-        return jsonResponse({
-          ok: true,
-          hasClientId: Boolean(env.GOOGLE_CLIENT_ID),
-          hasClientSecret: Boolean(env.GOOGLE_CLIENT_SECRET),
-          hasAppOrigins: Boolean(env.APP_ORIGINS),
-        }, request, env);
+        return jsonResponse({ ok: true }, request, env);
       }
 
       if (request.method === 'GET' && url.pathname === '/api/google/login') {
@@ -97,10 +151,18 @@ export default {
         return handleLogout(request, env, ctx);
       }
 
+      if (request.method === 'POST' && url.pathname === '/api/gemini/schedule') {
+        return handleGenerateSchedule(request, env);
+      }
+
       return new Response('Not found', { status: 404 });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error';
-      return jsonResponse({ error: message }, request, env, { status: 500 });
+      return jsonResponse(
+        { error: getPublicErrorMessage(error) },
+        request,
+        env,
+        { status: getErrorStatus(error) },
+      );
     }
   },
 };
@@ -218,6 +280,35 @@ async function handleSession(request: Request, env: Env): Promise<Response> {
   );
 }
 
+async function handleGenerateSchedule(request: Request, env: Env): Promise<Response> {
+  const resolved = await resolveSession(request, env);
+  if (!resolved.session) {
+    return jsonResponse(
+      { error: '認証が必要です' },
+      request,
+      env,
+      {
+        status: 401,
+        headers: resolved.clearCookie ? { 'Set-Cookie': clearSessionCookie(request) } : undefined,
+      },
+    );
+  }
+
+  const params = await request.json<unknown>();
+  const scheduleParams = validateGenerateScheduleRequest(params);
+  try {
+    const schedule = await generateSchedule(env, scheduleParams);
+    return jsonResponse(schedule, request, env);
+  } catch (error) {
+    return jsonResponse(
+      { error: getPublicErrorMessage(error) },
+      request,
+      env,
+      { status: getErrorStatus(error) },
+    );
+  }
+}
+
 async function handleLogout(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const resolved = await resolveSession(request, env);
   if (resolved.sessionId) {
@@ -234,6 +325,317 @@ async function handleLogout(request: Request, env: Env, ctx: ExecutionContext): 
     env,
     { headers: { 'Set-Cookie': clearSessionCookie(request) } },
   );
+}
+
+function validateGenerateScheduleRequest(value: unknown): GenerateScheduleRequest {
+  if (!isRecord(value)) {
+    throw new HttpError(400, '生成リクエストの形式が不正です');
+  }
+
+  const { date, invokedAt, calendarEvents, tasks, templates, timeZone } = value;
+  if (
+    typeof date !== 'string'
+    || typeof invokedAt !== 'string'
+    || typeof timeZone !== 'string'
+    || !Array.isArray(calendarEvents)
+    || !Array.isArray(tasks)
+    || !Array.isArray(templates)
+  ) {
+    throw new HttpError(400, '生成リクエストの形式が不正です');
+  }
+
+  return {
+    date,
+    invokedAt,
+    calendarEvents: calendarEvents.map(validateScheduleItem),
+    tasks: tasks.map(validateScheduleItem),
+    templates: templates.map(validateDailyTaskTemplate),
+    timeZone,
+  };
+}
+
+function validateScheduleItem(value: unknown): ScheduleItem {
+  if (!isRecord(value) || typeof value.title !== 'string' || !isScheduleSource(value.source)) {
+    throw new HttpError(400, '予定データの形式が不正です');
+  }
+
+  return {
+    id: optionalString(value.id),
+    title: value.title,
+    detail: optionalString(value.detail),
+    startTime: optionalString(value.startTime),
+    endTime: optionalString(value.endTime),
+    source: value.source,
+    category: optionalString(value.category),
+    parentName: optionalString(value.parentName),
+    status: isTaskStatus(value.status) ? value.status : undefined,
+    defaultComplete: optionalBoolean(value.defaultComplete),
+  };
+}
+
+function validateDailyTaskTemplate(value: unknown): DailyTaskTemplate {
+  if (!isRecord(value) || typeof value.name !== 'string') {
+    throw new HttpError(400, 'テンプレートの形式が不正です');
+  }
+
+  return {
+    name: value.name,
+    condition: optionalString(value.condition),
+    category: optionalString(value.category),
+    detail: optionalString(value.detail),
+    startTime: optionalString(value.startTime),
+    endTime: optionalString(value.endTime),
+    defaultComplete: optionalBoolean(value.defaultComplete),
+    children: Array.isArray(value.children)
+      ? value.children.map(validateDailyTaskChildTemplate)
+      : undefined,
+  };
+}
+
+function validateDailyTaskChildTemplate(value: unknown): Omit<DailyTaskTemplate, 'category' | 'children'> {
+  if (!isRecord(value) || typeof value.name !== 'string') {
+    throw new HttpError(400, 'テンプレートの形式が不正です');
+  }
+
+  return {
+    name: value.name,
+    condition: optionalString(value.condition),
+    detail: optionalString(value.detail),
+    startTime: optionalString(value.startTime),
+    endTime: optionalString(value.endTime),
+    defaultComplete: optionalBoolean(value.defaultComplete),
+  };
+}
+
+type GeminiErrorResponse = {
+  error?: {
+    message?: string;
+    status?: string;
+  };
+};
+
+type GeminiCallError = {
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+const MAX_GEMINI_ATTEMPTS = 2;
+
+async function generateSchedule(env: Env, params: GenerateScheduleRequest): Promise<GeneratedSchedule> {
+  if (!env.GEMINI_API_KEY) {
+    throw new HttpError(500, 'Gemini API Key が設定されていません');
+  }
+
+  let lastError: HttpError | null = null;
+  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt++) {
+    const result = await callGemini(env, buildSchedulePrompt(params));
+    if (result.ok) {
+      return parseGeneratedSchedule(result.text);
+    }
+
+    lastError = new HttpError(result.error.status, result.error.message);
+    const canRetry = attempt === 0 && result.error.retryable;
+    if (!canRetry) break;
+  }
+
+  throw lastError ?? new HttpError(500, 'スケジュール生成に失敗しました');
+}
+
+async function readGeminiError(response: Response): Promise<GeminiErrorResponse['error']> {
+  try {
+    const data = await response.json() as GeminiErrorResponse;
+    return data.error;
+  } catch {
+    return undefined;
+  }
+}
+
+function formatGeminiError(error: GeminiErrorResponse['error'], status: number): GeminiCallError {
+  const apiStatus = error?.status ?? '';
+  const message = error?.message ?? `HTTP ${status}`;
+
+  if (
+    apiStatus === 'RESOURCE_EXHAUSTED'
+    || message.toLowerCase().includes('quota')
+    || message.toLowerCase().includes('exhausted')
+  ) {
+    return {
+      status: 429,
+      message: 'Gemini API の quota 上限に達しました。Google AI Studio で利用状況を確認してください',
+      retryable: false,
+    };
+  }
+
+  if (status === 429) {
+    return {
+      status: 429,
+      message: 'Gemini API のリクエスト制限に達しました。しばらく待ってから再試行してください',
+      retryable: true,
+    };
+  }
+
+  return {
+    status: status === 429 ? 429 : 502,
+    message: `Gemini API エラー: ${message}`,
+    retryable: false,
+  };
+}
+
+async function callGemini(
+  env: Env,
+  prompt: string,
+): Promise<{ ok: true; text: string } | { ok: false; error: GeminiCallError }> {
+  const url = new URL(GEMINI_GENERATE_URL);
+  url.searchParams.set('key', env.GEMINI_API_KEY);
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await readGeminiError(response);
+    return { ok: false, error: formatGeminiError(error, response.status) };
+  }
+
+  const data = await response.json<GeminiResponse>();
+  const text = data.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? '')
+    .join('')
+    .trim();
+  if (!text) {
+    return {
+      ok: false,
+      error: {
+        status: 502,
+        message: 'Gemini API から生成結果が返されませんでした',
+        retryable: false,
+      },
+    };
+  }
+  return { ok: true, text };
+}
+
+function buildSchedulePrompt(params: GenerateScheduleRequest): string {
+  const { date, invokedAt, calendarEvents, tasks, templates, timeZone } = params;
+
+  return `あなたは個人のデイリースケジュール調整アシスタントです。
+登録日 ${date} のデイリータスクを、既存予定とテンプレートに基づいてスケジュールしてください。
+
+## 重要ルール
+
+1. テンプレートの \`condition\` を登録日・曜日で評価し、該当するタスクのみ登録する
+2. \`startTime\` は **他の予定・タスクがない場合のデフォルト配置時刻（目安）** である
+3. 当日に既存の Calendar 予定や Todo がある場合、衝突を避け **空き時間にずらして** 配置する
+4. \`endTime\` が相対指定（例: 開始から40分後）の場合、開始がずれても相対関係を維持する
+5. 曜日分岐（例: 月曜は6:30, それ以外は7:30）は登録日からデフォルト時刻を決定してから、ずらしルールを適用
+6. 親タスクの \`children\` は親の時間枠内で順序どおりに配置する
+7. \`defaultComplete: true\` のタスクは status を completed にする
+8. ずらした場合は summary に理由を記載する
+9. 時刻は ISO 8601 形式（タイムゾーン: ${timeZone}）で返す
+
+## コンテキスト
+
+- アプリ起動時刻: ${invokedAt}
+- 登録日: ${date}
+
+## 既存 Calendar 予定
+
+${JSON.stringify(calendarEvents, null, 2)}
+
+## 既存 Todo
+
+${JSON.stringify(tasks, null, 2)}
+
+## デイリータスクテンプレート
+
+${JSON.stringify(templates, null, 2)}
+
+## 出力形式
+
+以下の JSON のみを返してください（マークダウン不要）:
+
+{
+  "date": "${date}",
+  "items": [
+    {
+      "title": "タスク名",
+      "detail": "詳細（任意）",
+      "startTime": "ISO8601（任意）",
+      "endTime": "ISO8601（任意）",
+      "source": "daily",
+      "category": "DailyTask",
+      "parentName": "親タスク名（任意）",
+      "status": "needsAction",
+      "defaultComplete": false
+    }
+  ],
+  "summary": "調整内容の説明",
+  "taskSchedules": [
+    {
+      "title": "既存Todoのタイトル（tasks に含まれるもの）",
+      "startTime": "ISO8601（任意）",
+      "endTime": "ISO8601（任意）"
+    }
+  ]
+}
+
+既存の calendar / task は items に含めず、新規 daily タスクのみ返してください。
+taskSchedules には、## 既存 Todo に列挙された各タスクの実行時刻を割り当てて返してください（時刻が不明な場合は startTime/endTime を省略可）。
+時間枠のない子タスクは startTime/endTime 省略可。親タスク（AM-HK, PM-HK 等）は時間枠を持たせてください。`;
+}
+
+function parseGeneratedSchedule(text: string): GeneratedSchedule {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('JSON が見つかりません');
+  }
+
+  const parsed: unknown = JSON.parse(jsonMatch[0]);
+  if (!isRecord(parsed) || typeof parsed.date !== 'string' || !Array.isArray(parsed.items)) {
+    throw new Error('スキーマが不正です');
+  }
+
+  return {
+    date: parsed.date,
+    summary: typeof parsed.summary === 'string' ? parsed.summary : '',
+    items: parsed.items
+      .filter((item): item is Record<string, unknown> => isRecord(item))
+      .filter((item) => item.source !== 'calendar' && item.source !== 'task')
+      .map((item) => validateGeneratedScheduleItem({ ...item, source: 'daily' })),
+    taskSchedules: Array.isArray(parsed.taskSchedules)
+      ? parsed.taskSchedules
+          .filter((item): item is Record<string, unknown> => isRecord(item))
+          .map(validateTaskSchedule)
+      : undefined,
+  };
+}
+
+function validateTaskSchedule(value: Record<string, unknown>): TaskSchedule {
+  const title = value.title;
+  if (typeof title !== 'string' || !title.trim()) {
+    throw new Error('taskSchedules の title が不正です');
+  }
+  return {
+    title,
+    startTime: optionalString(value.startTime),
+    endTime: optionalString(value.endTime),
+  };
+}
+
+function validateGeneratedScheduleItem(value: unknown): ScheduleItem {
+  const item = validateScheduleItem(value);
+  if (item.source !== 'daily') {
+    throw new Error('生成結果に daily 以外の予定が含まれています');
+  }
+  return item;
 }
 
 async function resolveSession(request: Request, env: Env): Promise<ResolvedSession> {
@@ -381,7 +783,7 @@ function sanitizeReturnTo(returnTo: string | null, env: Env): string {
 }
 
 function getAllowedOrigins(env: Env): string[] {
-  return env.APP_ORIGINS
+  return (env.APP_ORIGINS ?? '')
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
@@ -427,6 +829,49 @@ function jsonResponse(
   });
 }
 
+class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+function getErrorStatus(error: unknown): number {
+  return error instanceof HttpError ? error.status : 500;
+}
+
+function getPublicErrorMessage(error: unknown): string {
+  if (error instanceof HttpError) {
+    return error.message;
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return '処理に失敗しました';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function optionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function isScheduleSource(value: unknown): value is ScheduleItem['source'] {
+  return value === 'calendar' || value === 'task' || value === 'daily';
+}
+
+function isTaskStatus(value: unknown): value is NonNullable<ScheduleItem['status']> {
+  return value === 'needsAction' || value === 'completed';
+}
+
 async function buildSessionCookie(request: Request, env: Env, sessionId: string): Promise<string> {
   const signedValue = await signSessionId(sessionId, env);
   return buildCookieString(request, signedValue, SESSION_MAX_AGE_MS / 1000);
@@ -468,7 +913,7 @@ async function verifySessionCookie(value: string, env: Env): Promise<string | nu
     return null;
   }
   const expected = await signValue(sessionId, env.SESSION_SECRET);
-  return expected === signature ? sessionId : null;
+  return constantTimeEqual(expected, signature) ? sessionId : null;
 }
 
 async function signValue(value: string, secret: string): Promise<string> {
@@ -489,6 +934,20 @@ async function generatePkce(): Promise<{ verifier: string; challenge: string }> 
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
   const challenge = base64UrlEncode(new Uint8Array(digest));
   return { verifier, challenge };
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  if (aBytes.length !== bBytes.length) {
+    return false;
+  }
+
+  let difference = 0;
+  for (let index = 0; index < aBytes.length; index++) {
+    difference |= aBytes[index] ^ bBytes[index];
+  }
+  return difference === 0;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {

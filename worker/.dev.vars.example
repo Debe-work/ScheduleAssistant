@@ -1,5 +1,7 @@
+# Copy to ~/secrets/schedule-assistant-worker.env (do NOT put real values in this repo)
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 SESSION_SECRET=replace-with-a-long-random-string
 TOKEN_ENCRYPTION_KEY=replace-with-another-long-random-string
+GEMINI_API_KEY=your-gemini-api-key
 APP_ORIGINS=http://localhost:5173,https://<your-github-user>.github.io

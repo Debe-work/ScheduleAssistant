@@ -1,0 +1,13 @@
+---
+description: Prevent duplicate dev servers during local verification
+alwaysApply: true
+---
+
+# Local Dev Server Discipline
+
+- Before starting a dev server, check whether the app or worker is already listening on the expected port.
+- Use one frontend dev server only. For this project, prefer `http://localhost:5173` / `http://127.0.0.1:5173` with `yarn dev --host 127.0.0.1 --port 5173 --strictPort`.
+- Use one Worker dev server only. For this project, prefer `http://localhost:8787` with `yarn worker:dev`.
+- Do not let Vite auto-increment to `5174`, `5175`, etc. If `5173` is busy, stop the stale process or ask before using another port.
+- When verifying OAuth behavior, use the same frontend origin throughout the flow; do not mix `5173`, `5174`, `5175`, or `5180`.
+- Playwright verification must report the exact URL under test and confirm the served source is from the intended single dev server.

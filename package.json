@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "worker:dev": "wrangler dev --config worker/wrangler.jsonc",
+    "worker:dev": "node scripts/worker-dev.mjs",
     "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
     "worker:typecheck": "tsc -p worker/tsconfig.json",
     "prebuild": "mkdir -p public/templates && cp templates/daily-tasks.md public/templates/daily-tasks.md",
@@ -14,7 +14,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.0",
     "js-yaml": "^4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -23,6 +22,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260704.1",
     "@eslint/js": "^9.17.0",
+    "@playwright/mcp": "^0.0.77",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.1.0",
     "@types/react": "^19.0.0",
