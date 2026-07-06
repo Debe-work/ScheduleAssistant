@@ -1,25 +1,22 @@
 import { useEffect, useState } from 'react';
-import { isAuthenticated, logout, startLogin } from '../services/googleAuth';
+import { useAuth } from '../hooks/useAuth';
 import { loadTemplates } from '../services/templateLoader';
+import { toErrorMessage } from '../utils/errors';
 import type { DailyTaskTemplate } from '../types';
 
 export function SettingsPage() {
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const { authed, login, logout } = useAuth();
   const [templates, setTemplates] = useState<DailyTaskTemplate[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    isAuthenticated()
-      .then(setAuthed)
-      .catch(() => setAuthed(false));
     loadTemplates()
       .then(setTemplates)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => setError(toErrorMessage(e)));
   }, []);
 
   const handleLogout = async () => {
     await logout();
-    setAuthed(false);
   };
 
   return (
@@ -38,7 +35,7 @@ export function SettingsPage() {
           </>
         )}
         {authed === false && (
-          <button type="button" className="btn btn-primary" onClick={() => startLogin()}>
+          <button type="button" className="btn btn-primary" onClick={() => login()}>
             Google アカウント連携
           </button>
         )}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
-import { PreviewPage } from './pages/PreviewPage';
-import { SettingsPage } from './pages/SettingsPage';
+
+const PreviewPage = lazy(() => import('./pages/PreviewPage').then((module) => ({ default: module.PreviewPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: 'Google アカウント連携がキャンセルされました',
@@ -29,11 +30,13 @@ export default function App() {
       <div className="app">
         <main className="main">
           {authError && <p className="error auth-error">{authError}</p>}
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/preview" element={<PreviewPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
+          <Suspense fallback={<p className="loading">読み込み中…</p>}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/preview" element={<PreviewPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </Suspense>
         </main>
         <nav className="nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>

@@ -46,9 +46,9 @@ describe('generateSchedule', () => {
     expect(url).toBe('https://worker.example/api/gemini/schedule');
     expect(init).toMatchObject({
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
     });
+    expect(new Headers(init.headers).get('Content-Type')).toBe('application/json');
     expect(JSON.parse(init.body as string)).toMatchObject({
       ...baseParams,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
