@@ -2,7 +2,7 @@ const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as cons
 
 export function todayString(): string {
   const d = new Date();
-  return formatLocalDate(d);
+  return formatLocalDateString(d);
 }
 
 export function formatScheduleDateLabel(dateString: string): string {
@@ -30,7 +30,7 @@ export function parseScheduleDateParts(dateString: string): {
   };
 }
 
-function formatLocalDate(d: Date): string {
+export function formatLocalDateString(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

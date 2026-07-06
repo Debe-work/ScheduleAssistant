@@ -6,8 +6,10 @@ export function applyTaskSchedules(
 ): ScheduleItem[] {
   if (!taskSchedules?.length) return tasks;
 
+  const scheduleByTitle = new Map(taskSchedules.map((schedule) => [schedule.title, schedule]));
+
   return tasks.map((task) => {
-    const scheduled = taskSchedules.find((s) => s.title === task.title);
+    const scheduled = scheduleByTitle.get(task.title);
     if (!scheduled) return task;
     return {
       ...task,

@@ -1,3 +1,5 @@
+import { buildWorkerUrl, readWorkerError, workerFetch } from './workerClient';
+
 type SessionResponse = {
   authenticated: boolean;
   expiresAt: number | null;
@@ -10,42 +12,8 @@ type AccessTokenResponse = {
 
 let accessTokenCache: AccessTokenResponse | null = null;
 
-function getWorkerBaseUrl(): string {
-  return import.meta.env.VITE_WORKER_BASE_URL?.replace(/\/$/, '') ?? '';
-}
-
-function buildWorkerUrl(path: string): string {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${getWorkerBaseUrl()}${normalizedPath}`;
-}
-
 function clearAccessTokenCache(): void {
   accessTokenCache = null;
-}
-
-async function readError(res: Response): Promise<string> {
-  try {
-    const data = await res.json();
-    if (typeof data?.error === 'string') {
-      return data.error;
-    }
-  } catch {
-    // ignore JSON parse failure
-  }
-  return `認証 API エラー: ${res.status}`;
-}
-
-async function workerFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const headers = new Headers(init.headers);
-  if (init.method && init.method !== 'GET' && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  return fetch(buildWorkerUrl(path), {
-    ...init,
-    headers,
-    credentials: 'include',
-  });
 }
 
 export async function startLogin(): Promise<void> {
@@ -68,7 +36,7 @@ export async function getAccessToken(): Promise<string | null> {
     return null;
   }
   if (!res.ok) {
-    throw new Error(await readError(res));
+    throw new Error(await readWorkerError(res, '認証 API エラー'));
   }
 
   const data = await res.json() as AccessTokenResponse;
@@ -83,7 +51,7 @@ export async function isAuthenticated(): Promise<boolean> {
 
   const res = await workerFetch('/api/google/session');
   if (!res.ok) {
-    throw new Error(await readError(res));
+    throw new Error(await readWorkerError(res, '認証 API エラー'));
   }
 
   const data = await res.json() as SessionResponse;
@@ -94,6 +62,6 @@ export async function logout(): Promise<void> {
   clearAccessTokenCache();
   const res = await workerFetch('/api/google/logout', { method: 'POST' });
   if (!res.ok) {
-    throw new Error(await readError(res));
+    throw new Error(await readWorkerError(res, '認証 API エラー'));
   }
 }

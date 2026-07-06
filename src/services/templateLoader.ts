@@ -1,4 +1,3 @@
-import yaml from 'js-yaml';
 import type { DailyTaskTemplate } from '../types';
 
 async function loadLocalTemplate(): Promise<string> {
@@ -13,7 +12,8 @@ function extractYamlFromMarkdown(markdown: string): string {
   return match[1];
 }
 
-function parseTemplate(yamlText: string): DailyTaskTemplate[] {
+async function parseTemplate(yamlText: string): Promise<DailyTaskTemplate[]> {
+  const yaml = await import('js-yaml');
   const parsed = yaml.load(yamlText) as { tasks?: DailyTaskTemplate[] };
   if (!parsed?.tasks) throw new Error('テンプレート形式が不正です');
   return parsed.tasks;

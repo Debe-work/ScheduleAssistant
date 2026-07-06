@@ -9,6 +9,8 @@ type HelpHintProps = {
 const PANEL_WIDTH = 296;
 const VIEWPORT_MARGIN = 12;
 const TRIGGER_GAP = 8;
+const PASSIVE_CAPTURE_OPTIONS = { capture: true, passive: true } as const;
+const PASSIVE_OPTIONS = { passive: true } as const;
 
 export function HelpHint({ label, children }: HelpHintProps) {
   const [open, setOpen] = useState(false);
@@ -59,10 +61,10 @@ export function HelpHint({ label, children }: HelpHintProps) {
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('scroll', updatePosition, PASSIVE_CAPTURE_OPTIONS);
     return () => {
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('scroll', updatePosition, PASSIVE_CAPTURE_OPTIONS);
     };
   }, [open, children]);
 
@@ -76,7 +78,7 @@ export function HelpHint({ label, children }: HelpHintProps) {
   useEffect(() => {
     if (!open) return;
 
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+    const handlePointerDown = (event: Event) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
       setOpen(false);
@@ -87,7 +89,7 @@ export function HelpHint({ label, children }: HelpHintProps) {
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, PASSIVE_OPTIONS);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);

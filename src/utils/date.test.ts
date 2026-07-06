@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { formatScheduleDateLabel, parseScheduleDateParts, todayString } from './date';
+import { formatLocalDateString, formatScheduleDateLabel, parseScheduleDateParts, todayString } from './date';
 
 describe('formatScheduleDateLabel', () => {
   it('formats a schedule date with a Japanese weekday label', () => {
@@ -35,5 +35,11 @@ describe('todayString', () => {
     expect(todayString()).toBe('2026-07-06');
 
     vi.useRealTimers();
+  });
+});
+
+describe('formatLocalDateString', () => {
+  it('formats a Date as a local yyyy-mm-dd string', () => {
+    expect(formatLocalDateString(new Date('2026-07-06T12:34:56'))).toBe('2026-07-06');
   });
 });
