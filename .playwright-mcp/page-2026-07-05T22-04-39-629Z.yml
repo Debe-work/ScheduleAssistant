@@ -1,0 +1,251 @@
+- generic [ref=f5e1]:
+  - region [ref=f5e193]:
+    - paragraph [ref=f5e3]:
+      - text: Google AI Studio では、サービスの提供および品質向上とトラフィックの分析に Cookie が使用されています。同意すると、広告の配信や、表示されるコンテンツと広告のパーソナライズにも Cookie が使用されます。
+      - link [ref=f5e194] [cursor=pointer]:
+        - /url: https://policies.google.com/technologies/cookies?hl=ja
+        - text: 詳細
+    - button [ref=f5e195] [cursor=pointer]: 同意する
+    - button [ref=f5e196] [cursor=pointer]: 同意しない
+  - generic [ref=f5e9]:
+    - button [ref=f5e197]: Skip to main content
+    - generic [ref=f5e11]:
+      - generic [ref=f5e12]:
+        - button [ref=f5e198] [cursor=pointer]:
+          - generic [ref=f5e14]: menu_open
+        - generic [ref=f5e15]:
+          - generic [ref=f5e16]:
+            - link [ref=f5e199] [cursor=pointer]:
+              - /url: /prompts/new_chat
+              - img [ref=f5e200]
+            - button [ref=f5e201] [cursor=pointer]:
+              - generic [ref=f5e35]: expand_more
+          - navigation [ref=f5e36]:
+            - generic [ref=f5e37]:
+              - link [ref=f5e202] [cursor=pointer]:
+                - /url: /prompts/new_chat
+                - generic [ref=f5e39]: chevron_left
+                - text: Dashboard
+              - list [ref=f5e41]:
+                - listitem [ref=f5e42]:
+                  - link [ref=f5e203] [cursor=pointer]:
+                    - /url: /api-keys
+                    - text: API キー
+                - listitem [ref=f5e44]:
+                  - link [ref=f5e204] [cursor=pointer]:
+                    - /url: /projects
+                    - text: プロジェクト
+                - listitem [ref=f5e46]:
+                  - link [ref=f5e205] [cursor=pointer]:
+                    - /url: /usage
+                    - text: 使用量
+                - listitem [ref=f5e48]:
+                  - link [ref=f5e206] [cursor=pointer]:
+                    - /url: /rate-limit
+                    - text: レート制限
+                - listitem [ref=f5e50]:
+                  - link [ref=f5e207] [cursor=pointer]:
+                    - /url: /spend
+                    - text: 利用額
+                - listitem [ref=f5e52]:
+                  - link [ref=f5e208] [cursor=pointer]:
+                    - /url: /billing
+                    - text: 課金
+                - listitem [ref=f5e54]:
+                  - link [ref=f5e209] [cursor=pointer]:
+                    - /url: /logs
+                    - text: ログとデータセット
+                - listitem [ref=f5e56]:
+                  - link [ref=f5e210] [cursor=pointer]:
+                    - /url: https://ai.google.dev/gemini-api/docs/changelog
+                    - text: 変更履歴
+                    - generic [ref=f5e58]: arrow_outward
+            - generic [ref=f5e60]:
+              - generic [ref=f5e61]:
+                - button [ref=f5e211] [cursor=pointer]:
+                  - generic [ref=f5e65]: notifications
+                - button [ref=f5e212] [cursor=pointer]:
+                  - generic [ref=f5e69]: settings
+                - button [ref=f5e213] [cursor=pointer]:
+                  - generic [ref=f5e72]: search
+                - button [ref=f5e214] [cursor=pointer]:
+                  - generic [ref=f5e76]: key
+              - generic [ref=f5e77]:
+                - button [ref=f5e215] [cursor=pointer]:
+                  - generic [ref=f5e79]: naberyonaberyo@gmail.com
+                - button [ref=f5e216] [cursor=pointer]:
+                  - img [ref=f5e217]
+      - main [ref=f5e86]:
+        - generic [ref=f5e92]:
+          - generic [ref=f5e94]:
+            - heading [level=2] [ref=f5e218]: Gemini API の請求額
+            - button [ref=f5e219] [cursor=pointer]:
+              - generic [ref=f5e99]: description
+              - text: ドキュメント
+          - generic [ref=f5e100]:
+            - generic [ref=f5e101]:
+              - generic [ref=f5e102]: warning
+              - generic [ref=f5e106]:
+                - text: サービスを再開するには、クレジット残高が 0 ドル以上必要です。対象となる GCP クレジットがある場合は、まずそのクレジットが適用されます。
+                - link [ref=f5e220] [cursor=pointer]:
+                  - /url: https://ai.google.dev/gemini-api/docs/billing#buy-credits
+                  - text: 詳細
+            - button [ref=f5e221] [cursor=pointer]:
+              - generic [ref=f5e109]: close
+          - generic [ref=f5e110]:
+            - generic [ref=f5e111]:
+              - generic [ref=f5e112]:
+                - generic [ref=f5e113]: 請求先アカウント
+                - combobox [ref=f5e222] [cursor=pointer]:
+                  - generic [ref=f5e119]:
+                    - generic [ref=f5e121]: My Billing Account
+                    - generic [ref=f5e122]: expand_more
+              - button [ref=f5e223] [cursor=pointer]:
+                - generic [ref=f5e124]: "ID: 01BB7D-5236F5-547DB0"
+                - generic [ref=f5e125]: file_copy
+            - generic [ref=f5e126]:
+              - button [ref=f5e224] [cursor=pointer]:
+                - generic [ref=f5e131]:
+                  - text: 有料 1
+                  - generic [ref=f5e132]: · $250 請求先アカウントの階層の上限
+                - text: expand_more
+              - button [ref=f5e225] [cursor=pointer]:
+                - generic [ref=f5e138]:
+                  - generic [ref=f5e139]: 1 個のプロジェクト
+                  - text: ·
+                  - link [ref=f5e226]:
+                    - /url: /spend?project=gen-lang-client-0465678821
+                    - text: Default Gemini Project
+                - text: expand_more
+            - iframe [ref=f5e145]:
+              - generic [ref=f9e2]:
+                - button "お支払い" [disabled] [ref=f9e6] [cursor=pointer]:
+                  - generic [ref=f9e8]: お支払い
+                - generic [ref=f9e9]:
+                  - generic [ref=f9e10]:
+                    - generic [ref=f9e11]:
+                      - generic [ref=f9e14]: クレジット残高
+                      - generic [ref=f9e15]:
+                        - generic [ref=f9e16]: ￥0
+                        - generic [ref=f9e17]:
+                          - generic [ref=f9e19]: サービスを継続するには、クレジットを購入してください
+                          - button "クレジットの概要を表示" [ref=f9e20] [cursor=pointer]:
+                            - generic [ref=f9e22]: クレジットの概要を表示
+                    - generic [ref=f9e24]:
+                      - generic [ref=f9e25]:
+                        - generic [ref=f9e26]:
+                          - img [ref=f9e28]
+                          - generic [ref=f9e31]: 前払い(プリペイド)
+                        - generic [ref=f9e32]:
+                          - generic [ref=f9e33]:
+                            - generic [ref=f9e35]: 
+                            - generic [ref=f9e36]: "オートチャージ: オフ"
+                          - button "自動リチャージを設定" [ref=f9e37] [cursor=pointer]:
+                            - generic [ref=f9e39]: 自動リチャージを設定
+                      - generic [ref=f9e42]:
+                        - text: クレジットは、Gemini API サービスが実行される前にサービスの支払いに使用されます。クレジットは払い戻しできません（
+                        - link "クレジットに関する追加規約" [ref=f9e43] [cursor=pointer]:
+                          - /url: https://cloud.google.com/terms/supplemental-paid-credit
+                        - text: で許可されている場合を除く）。また、有効期限は購入日から 1 年です。
+                    - button "クレジットを購入" [ref=f9e47] [cursor=pointer]:
+                      - generic [ref=f9e49]: クレジットを購入
+                  - generic [ref=f9e50]:
+                    - generic [ref=f9e52]:
+                      - generic [ref=f9e57]: ご利用履歴
+                      - generic [ref=f9e62]: まだ取引を行っていません
+                      - button "ご利用履歴を表示する" [disabled] [ref=f9e65]:
+                        - generic [ref=f9e67]: ご利用履歴を表示する
+                    - generic [ref=f9e69]:
+                      - generic [ref=f9e74]: お支払いタイプ
+                      - generic [ref=f9e79]: お支払い方法が 2 件保存されています
+                      - button "お支払い方法の管理" [ref=f9e82] [cursor=pointer]:
+                        - generic [ref=f9e84]: お支払い方法の管理
+                    - generic [ref=f9e86]:
+                      - generic [ref=f9e91]: 設定
+                      - generic [ref=f9e92]:
+                        - generic [ref=f9e96]: Cloud Prepay 01BB7D-5236F5-547DB0
+                        - generic [ref=f9e100]: 渡邉 亮
+                        - 'button "ユーザー数: 1" [ref=f9e105] [cursor=pointer]':
+                          - generic [ref=f9e107]: "ユーザー数: 1"
+                      - button "設定を管理する" [ref=f9e110] [cursor=pointer]:
+                        - generic [ref=f9e112]: 設定を管理する
+            - generic [ref=f5e147]:
+              - generic [ref=f5e148]:
+                - combobox [ref=f5e154] [cursor=pointer]:
+                  - generic [ref=f5e155]:
+                    - generic [ref=f5e157]: 今月
+                    - generic [ref=f5e158]: expand_more
+                - combobox [ref=f5e227] [cursor=pointer]:
+                  - generic [ref=f5e165]:
+                    - generic [ref=f5e167]: すべてのモデル
+                    - generic [ref=f5e168]: expand_more
+              - generic [ref=f5e171]:
+                - generic [ref=f5e172]:
+                  - heading [level=3] [ref=f5e228]:
+                    - generic [ref=f5e176]: Gemini API の請求先アカウントの費用
+                  - generic [ref=f5e178]: July 1 - 5, 2026
+                - generic [ref=f5e180]:
+                  - img [ref=f5e183]
+                  - generic [ref=f5e188]: 利用可能な使用状況データがありません。
+              - generic [ref=f5e189]:
+                - text: 費用情報が更新されるまで最長で 24 時間ほどかかることがあります。
+                - generic [ref=f5e190]:
+                  - text: このグラフは、請求先アカウントの
+                  - link [ref=f5e229] [cursor=pointer]:
+                    - /url: https://ai.google.dev/gemini-api/docs/billing#billing-plans
+                    - text: 前払いと後払い
+                  - text: の両方における Gemini API の費用を示しています。
+  - dialog [active] [ref=f5e231]:
+    - iframe [ref=f5e233]:
+      - generic [ref=f11e13]:
+        - heading "クレジットを購入" [level=1] [ref=f11e15]:
+          - text: クレジットを購入
+          - generic: クレジットを購入
+        - generic [ref=f11e17]:
+          - generic [ref=f11e18]:
+            - generic [ref=f11e20]:
+              - separator [ref=f11e21]
+              - generic [ref=f11e22]:
+                - generic [ref=f11e23]: Cloud Prepay 01BB7D-5236F5-547DB0
+                - generic [ref=f11e24]:
+                  - generic [ref=f11e25]: ￥0
+                  - generic [ref=f11e27]: クレジット残高
+              - separator [ref=f11e28]
+            - group "お支払い方法" [ref=f11e31]:
+              - generic:
+                - generic: お支払い方法
+              - 'button "Visa（末尾 4 桁: 3 8 7 8） 変更" [ref=f11e34] [cursor=pointer]':
+                - generic [ref=f11e35]:
+                  - generic [ref=f11e38]:
+                    - text: Visa •••• 3878
+                    - generic: "Visa（末尾 4 桁: 3 8 7 8）"
+                  - generic [ref=f11e39]: 変更
+            - generic [ref=f11e40]:
+              - generic [ref=f11e41]:
+                - generic [ref=f11e42]: お支払い金額
+                - button "お支払い額がわからない場合は、Gemini API ドキュメントで、モデルと階層ごとの料金をご確認ください。" [ref=f11e43] [cursor=pointer]
+              - radiogroup "お支払い金額" [ref=f11e44]:
+                - generic [ref=f11e45]:
+                  - radio "￥5,000" [checked] [ref=f11e46] [cursor=pointer]:
+                    - generic [ref=f11e49]: ￥5,000
+                  - radio "￥10,000" [ref=f11e50] [cursor=pointer]:
+                    - generic [ref=f11e53]: ￥10,000
+                  - radio "￥20,000" [ref=f11e54] [cursor=pointer]:
+                    - generic [ref=f11e57]: ￥20,000
+                  - radio "その他の金額" [ref=f11e58] [cursor=pointer]:
+                    - generic [ref=f11e61]: その他の金額
+              - generic [ref=f11e62]:
+                - generic "オートチャージ" [ref=f11e64]:
+                  - switch "オートチャージ" [ref=f11e65] [cursor=pointer]:
+                    - generic [ref=f11e69]: オートチャージ
+                - generic [ref=f11e71]: 推奨
+            - generic [ref=f11e73]:
+              - text: クレジットは Gemini API でのみご利用いただけ、払い戻しはできません（
+              - link "クレジットに関する追加規約" [ref=f11e74] [cursor=pointer]:
+                - /url: https://cloud.google.com/terms/supplemental-paid-credit
+              - text: で許可されている場合を除く）。クレジットの有効期限は購入日から 1 年です。
+          - generic [ref=f11e75]:
+            - button "キャンセル" [ref=f11e79]:
+              - generic [ref=f11e82]: キャンセル
+            - button "次へ" [ref=f11e88]:
+              - generic [ref=f11e91]: 次へ

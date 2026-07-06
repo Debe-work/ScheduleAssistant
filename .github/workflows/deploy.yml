@@ -30,8 +30,6 @@ jobs:
       - name: Build
         env:
           GITHUB_PAGES: 'true'
-          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-          VITE_TEMPLATE_SOURCE: local
           VITE_WORKER_BASE_URL: ${{ secrets.VITE_WORKER_BASE_URL }}
         run: yarn build
 

@@ -7,6 +7,7 @@ import { fetchCalendarEvents } from '../services/googleCalendar';
 import { fetchTasks } from '../services/googleTasks';
 import { loadTemplates } from '../services/templateLoader';
 import { generateSchedule } from '../services/geminiAgent';
+import { mergeTaskSchedulesIntoDraft } from '../services/taskScheduleMerge';
 import { saveScheduleDraft } from '../storage/scheduleDraft';
 import type { GeneratedSchedule } from '../types';
 
@@ -41,7 +42,9 @@ export function HomePage() {
         templates,
       });
 
-      saveScheduleDraft({ schedule, calendarEvents, tasks });
+      const tasksWithSchedules = mergeTaskSchedulesIntoDraft(tasks, schedule);
+
+      saveScheduleDraft({ schedule, calendarEvents, tasks: tasksWithSchedules });
       navigate('/preview');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -78,4 +81,3 @@ export function HomePage() {
     </div>
   );
 }
-

@@ -1,0 +1,49 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: 読み込んでいます
+        - progressbar [ref=e8]
+      - main [ref=e15]:
+        - generic [ref=e16]:
+          - img [ref=e19]
+          - generic [ref=e24]:
+            - heading "ログイン" [level=1] [ref=e25]
+            - generic [ref=e26]: Google アカウントでログインします。このアカウントは、ブラウザ内の他の Google アプリで利用できます。
+        - generic [ref=e29]:
+          - generic [ref=e34]:
+            - generic [ref=e39]:
+              - textbox "メールアドレスまたは電話番号" [active] [ref=e40]
+              - generic: メールアドレスまたは電話番号
+            - button "メールアドレスを忘れた場合" [ref=e44] [cursor=pointer]
+          - generic [ref=e47]:
+            - text: ご自分のパソコンでない場合は、ゲストモードを使用して非公開でログインしてください。
+            - link "ゲストモードの使い方についての詳細（別サイト、新しいウィンドウで開きます）" [ref=e48] [cursor=pointer]:
+              - /url: https://support.google.com/chrome/answer/6130773?hl=ja
+              - text: ゲストモードの使い方の詳細
+        - generic [ref=e50]:
+          - button "次へ" [ref=e54]:
+            - generic [ref=e57]: 次へ
+          - button "アカウントを作成" [ref=e63]:
+            - generic [ref=e66]: アカウントを作成
+    - contentinfo [ref=e70]:
+      - combobox "言語の変更 日本語" [ref=e74] [cursor=pointer]:
+        - generic:
+          - generic: 日本語
+        - generic:
+          - img
+      - list [ref=e76]:
+        - listitem [ref=e77]:
+          - link "Google アカウント ヘルプセンターを開く（別サイト、新しいウィンドウで開きます）" [ref=e78] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=ja&p=account_iph
+            - text: ヘルプ
+        - listitem [ref=e79]:
+          - link "プライバシー ポリシー（別サイト、新しいウィンドウで開きます）" [ref=e80] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja&privacy=true
+            - text: プライバシー
+        - listitem [ref=e81]:
+          - link "Google 利用規約（別サイト、新しいウィンドウで開きます）" [ref=e82] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja
+            - text: 規約
+  - iframe [ref=e83]:
+    

@@ -1,0 +1,62 @@
+- generic [active] [ref=f21e1]:
+  - generic [ref=f21e2]:
+    - generic [ref=f21e3]:
+      - progressbar [ref=f21e5]
+      - generic [ref=f21e13]:
+        - generic [ref=f21e14]:
+          - generic [ref=f21e16]:
+            - img [ref=f21e18]
+            - generic [ref=f21e23]: Google にログイン
+          - generic [ref=f21e24]:
+            - heading "Schedule Assistant が Google アカウントへのアクセスを求めています" [level=1] [ref=f21e25]:
+              - generic [ref=f21e27]: Schedule Assistant が Google アカウントへのアクセスを求めています
+            - generic [ref=f21e34]: naberyonaberyo@gmail.com
+        - generic [ref=f21e37]:
+          - generic [ref=f21e41]:
+            - heading "Schedule Assistant はすでに一部のアクセス権限を付与されています" [level=2] [ref=f21e43]:
+              - img [ref=f21e45]
+              - generic [ref=f21e47]: Schedule Assistant はすでに一部のアクセス権限を付与されています
+            - generic [ref=f21e50]:
+              - text: Schedule Assistant が一部のアクセス権限を付与されている
+              - button "2 件のサービス" [ref=f21e51] [cursor=pointer]
+              - text: を確認します。
+          - generic [ref=f21e54]:
+            - heading "Schedule Assistant を信頼できることを確認" [level=2] [ref=f21e56]:
+              - generic [ref=f21e57]: Schedule Assistant を信頼できることを確認
+            - generic [ref=f21e60]:
+              - generic [ref=f21e61]:
+                - heading [level=2] [ref=f21e63]:
+                  - img [ref=f21e65]
+                - link "Schedule Assistant のプライバシー ポリシーや利用規約へのリンクが表示されない理由をご確認ください" [ref=f21e70] [cursor=pointer]:
+                  - /url: https://support.google.com/accounts?p=oauth_notos
+              - generic [ref=f21e71]: Schedule Assistant のプライバシー ポリシーと利用規約を読み、Schedule Assistant でお客様のデータがどのように処理、保護されるかをご確認ください。
+              - generic [ref=f21e72]:
+                - text: 変更は
+                - link "Google アカウント" [ref=f21e73] [cursor=pointer]:
+                  - /url: https://myaccount.google.com/connections
+                - text: からいつでもできます。
+              - generic [ref=f21e74]:
+                - text: Google が
+                - link "データを安全に共有する" [ref=f21e75] [cursor=pointer]:
+                  - /url: https://support.google.com/accounts/answer/14012355
+                - text: 仕組みについて知る。
+        - generic [ref=f21e78]:
+          - button "キャンセル" [ref=f21e82]: キャンセル
+          - button "続行" [ref=f21e88]: 続行
+    - contentinfo [ref=f21e92]:
+      - combobox "‪日本語‬" [ref=f21e96] [cursor=pointer]:
+        - generic:
+          - generic: ‪日本語‬
+        - generic:
+          - img
+      - list [ref=f21e98]:
+        - listitem [ref=f21e99]:
+          - link "ヘルプ" [ref=f21e100] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=ja&p=account_iph
+        - listitem [ref=f21e101]:
+          - link "プライバシー" [ref=f21e102] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja&privacy=true
+        - listitem [ref=f21e103]:
+          - link "規約" [ref=f21e104] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja
+  - generic [ref=f21e106]: Schedule Assistant が Google アカウントへのアクセスを求めています

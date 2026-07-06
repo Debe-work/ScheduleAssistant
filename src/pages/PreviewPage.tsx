@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ScheduleTimeline } from '../components/ScheduleTimeline';
-import { TaskListEditor } from '../components/TaskListEditor';
 import { loadScheduleDraft, saveScheduleDraft, type ScheduleDraft } from '../storage/scheduleDraft';
 import { registerSchedule } from '../services/scheduleRegister';
 import type { GeneratedSchedule } from '../types';
@@ -22,18 +21,38 @@ export function PreviewPage() {
   }, [navigate]);
 
   const handleItemsChange = (items: GeneratedSchedule['items']) => {
-    if (!draft) return;
-    const next: ScheduleDraft = {
-      ...draft,
-      schedule: { ...draft.schedule, items },
-    };
-    setDraft(next);
-    saveScheduleDraft(next);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next: ScheduleDraft = {
+        ...prev,
+        schedule: { ...prev.schedule, items },
+      };
+      saveScheduleDraft(next);
+      return next;
+    });
+  };
+
+  const handleTasksChange = (tasks: ScheduleDraft['tasks']) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next: ScheduleDraft = { ...prev, tasks };
+      saveScheduleDraft(next);
+      return next;
+    });
+  };
+
+  const handleCalendarChange = (calendarEvents: ScheduleDraft['calendarEvents']) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next: ScheduleDraft = { ...prev, calendarEvents };
+      saveScheduleDraft(next);
+      return next;
+    });
   };
 
   const handleRegister = async () => {
     if (!draft) return;
-    if (!confirm('Google Calendar / Todo に登録しますか？')) return;
+    if (!confirm('専用カレンダーと Google Todo に登録しますか？')) return;
 
     setRegistering(true);
     setResult(null);
@@ -43,7 +62,7 @@ export function PreviewPage() {
         ...draft.tasks,
       ]);
       setResult(
-        `Calendar: ${res.calendarCreated}件 / Todo: ${res.tasksCreated}件 / スキップ: ${res.skipped}件` +
+        `専用カレンダー作成: ${res.calendarCreated}件 / カレンダー更新: ${res.calendarUpdated}件 / Todo 新規: ${res.tasksCreated}件 / Todo 更新: ${res.tasksUpdated}件 / スキップ: ${res.skipped}件` +
           (res.errors.length ? `\nエラー: ${res.errors.join(', ')}` : '') +
           (res.warnings.length ? `\n警告: ${res.warnings.join(', ')}` : ''),
       );
@@ -62,16 +81,20 @@ export function PreviewPage() {
       {draft.schedule.summary && <p className="summary">{draft.schedule.summary}</p>}
 
       <section>
-        <h2>タイムライン</h2>
+        <h2>スケジュール</h2>
+        <p className="section-hint">
+          デイリータスク・Google Todo・カレンダーの取得項目を編集できます。終日予定は日付のみのため時刻は編集できません。
+          登録時は時刻把握用に専用カレンダーへ予定を作り、Todo 操作用に Google Todo も作成・更新します。
+        </p>
         <ScheduleTimeline
           items={draft.schedule.items}
-          existingItems={[...draft.calendarEvents, ...draft.tasks]}
+          calendarEvents={draft.calendarEvents}
+          tasks={draft.tasks}
+          date={draft.schedule.date}
+          onItemsChange={handleItemsChange}
+          onTasksChange={handleTasksChange}
+          onCalendarChange={handleCalendarChange}
         />
-      </section>
-
-      <section>
-        <h2>編集</h2>
-        <TaskListEditor items={draft.schedule.items} onChange={handleItemsChange} />
       </section>
 
       <button

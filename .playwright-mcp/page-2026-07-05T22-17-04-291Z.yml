@@ -1,0 +1,14 @@
+- generic [ref=f23e3]:
+  - main [ref=f23e4]:
+    - generic [ref=f23e5]:
+      - heading "Schedule Assistant" [level=1] [ref=f23e6]
+      - paragraph [ref=f23e7]: デイリータスクを自動で割り振ります
+      - generic [ref=f23e8]:
+        - generic [ref=f23e9]: 登録日
+        - textbox "登録日" [ref=f23e10]: 2026-07-06
+      - button "スケジュール生成" [ref=f23e14] [cursor=pointer]
+  - navigation [ref=f23e11]:
+    - link "ホーム" [ref=f23e12] [cursor=pointer]:
+      - /url: /
+    - link "設定" [ref=f23e13] [cursor=pointer]:
+      - /url: /settings

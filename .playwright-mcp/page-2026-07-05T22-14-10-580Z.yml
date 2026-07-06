@@ -1,0 +1,14 @@
+- generic [ref=f14e3]:
+  - main [ref=f14e4]:
+    - generic [ref=f14e5]:
+      - heading "Schedule Assistant" [level=1] [ref=f14e6]
+      - paragraph [ref=f14e7]: デイリータスクを自動で割り振ります
+      - generic [ref=f14e8]:
+        - generic [ref=f14e9]: 登録日
+        - textbox "登録日" [ref=f14e10]: 2026-07-06
+      - button "Google アカウント連携" [ref=f14e11] [cursor=pointer]
+  - navigation [ref=f14e12]:
+    - link "ホーム" [ref=f14e13] [cursor=pointer]:
+      - /url: /
+    - link "設定" [ref=f14e14] [cursor=pointer]:
+      - /url: /settings

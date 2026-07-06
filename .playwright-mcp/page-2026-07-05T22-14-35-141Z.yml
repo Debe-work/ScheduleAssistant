@@ -1,0 +1,49 @@
+- generic [active] [ref=f15e1]:
+  - generic [ref=f15e3]:
+    - generic [ref=f15e4]:
+      - generic [ref=f15e6]:
+        - generic [ref=f15e7]: 読み込んでいます
+        - progressbar [ref=f15e8]
+      - main [ref=f15e15]:
+        - generic [ref=f15e16]:
+          - generic [ref=f15e19]:
+            - img [ref=f15e21]
+            - generic [ref=f15e26]: Google でログイン
+          - generic [ref=f15e27]:
+            - heading "アカウントを選択してください" [level=1] [ref=f15e28]
+            - generic [ref=f15e30]:
+              - text: 「
+              - button "Schedule Assistant" [ref=f15e31] [cursor=pointer]
+              - text: 」に移動
+        - list [ref=f15e42]:
+          - listitem [ref=f15e43]:
+            - link "Makoto Watanabe naberyonaberyo@gmail.com" [ref=f15e44] [cursor=pointer]:
+              - generic [ref=f15e48]:
+                - generic [ref=f15e49]: Makoto Watanabe
+                - generic [ref=f15e50]: naberyonaberyo@gmail.com
+          - listitem [ref=f15e51]:
+            - link "別のアカウントを使用" [ref=f15e52] [cursor=pointer]:
+              - generic [ref=f15e53]:
+                - img [ref=f15e55]
+                - generic [ref=f15e58]: 別のアカウントを使用
+    - contentinfo [ref=f15e63]:
+      - combobox "言語の変更 日本語" [ref=f15e67] [cursor=pointer]:
+        - generic:
+          - generic: 日本語
+        - generic:
+          - img
+      - list [ref=f15e69]:
+        - listitem [ref=f15e70]:
+          - link "Google アカウント ヘルプセンターを開く（別サイト、新しいウィンドウで開きます）" [ref=f15e71] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=ja&p=account_iph
+            - text: ヘルプ
+        - listitem [ref=f15e72]:
+          - link "プライバシー ポリシー（別サイト、新しいウィンドウで開きます）" [ref=f15e73] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja&privacy=true
+            - text: プライバシー
+        - listitem [ref=f15e74]:
+          - link "Google 利用規約（別サイト、新しいウィンドウで開きます）" [ref=f15e75] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja
+            - text: 規約
+  - iframe [ref=f15e76]:
+    

@@ -1,22 +1,35 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { PreviewPage } from './pages/PreviewPage';
 import { SettingsPage } from './pages/SettingsPage';
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  access_denied: 'Google アカウント連携がキャンセルされました',
+  missing_oauth_state: '認証セッションを確認できませんでした。もう一度お試しください',
+  oauth_state_expired: '認証セッションの有効期限が切れました。もう一度お試しください',
+};
+
 function OAuthHandler({ children }: { children: React.ReactNode }) {
+  const [authError, setAuthError] = useState<string | null>(null);
+
   useEffect(() => {
     const url = new URL(window.location.href);
-    const authError = url.searchParams.get('authError');
-    if (!authError) return;
+    const errorCode = url.searchParams.get('authError');
+    if (!errorCode) return;
 
-    alert(`認証エラー: ${authError}`);
+    setAuthError(AUTH_ERROR_MESSAGES[errorCode] ?? '認証に失敗しました。もう一度お試しください');
     url.searchParams.delete('authError');
     url.searchParams.delete('iss');
     window.history.replaceState({}, '', url.pathname + url.search);
   }, []);
 
-  return <>{children}</>;
+  return (
+    <>
+      {authError && <p className="error auth-error">{authError}</p>}
+      {children}
+    </>
+  );
 }
 
 export default function App() {

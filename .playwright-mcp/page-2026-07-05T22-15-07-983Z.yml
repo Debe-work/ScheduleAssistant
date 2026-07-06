@@ -1,0 +1,34 @@
+- generic [active] [ref=f20e1]:
+  - generic [ref=f20e2]:
+    - generic [ref=f20e3]:
+      - progressbar [ref=f20e5]
+      - generic [ref=f20e13]:
+        - generic [ref=f20e14]:
+          - img [ref=f20e16]
+          - heading "このアプリは Google で確認されていません" [level=1] [ref=f20e22]
+        - generic [ref=f20e32]:
+          - text: 現在テスト中のアプリへのアクセスが許可されました。招待元の
+          - button "デベロッパー" [ref=f20e33] [cursor=pointer]
+          - text: を信頼できる場合のみ、続行してください。
+        - generic [ref=f20e35]:
+          - button "安全なページに戻る" [ref=f20e39]:
+            - generic [ref=f20e42]: 安全なページに戻る
+          - button "続行" [ref=f20e46]:
+            - generic [ref=f20e49]: 続行
+    - contentinfo [ref=f20e51]:
+      - combobox "‪日本語‬" [ref=f20e55] [cursor=pointer]:
+        - generic:
+          - generic: ‪日本語‬
+        - generic:
+          - img
+      - list [ref=f20e57]:
+        - listitem [ref=f20e58]:
+          - link "ヘルプ" [ref=f20e59] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=ja&p=account_iph
+        - listitem [ref=f20e60]:
+          - link "プライバシー" [ref=f20e61] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja&privacy=true
+        - listitem [ref=f20e62]:
+          - link "規約" [ref=f20e63] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=JP&hl=ja
+  - generic [ref=f20e65]: このアプリは Google で確認されていません

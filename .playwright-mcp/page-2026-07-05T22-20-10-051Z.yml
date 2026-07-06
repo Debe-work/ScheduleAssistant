@@ -1,0 +1,308 @@
+- generic [ref=f23e3]:
+  - main [ref=f23e4]:
+    - generic [ref=f23e19]:
+      - heading "プレビュー" [level=1] [ref=f23e20]
+      - paragraph [ref=f23e21]: デイリータスクをスケジュールしました。 - 「AM-HK」は「起床」タスクとの衝突を避けるため、デフォルトの6:30から7:20に開始時刻を調整しました。 - 「夕飯」は既存の「アレン飯」予定との衝突を避けるため、デフォルトの19:30から20:30に開始時刻を調整しました。
+      - generic [ref=f23e22]:
+        - heading "タイムライン" [level=2] [ref=f23e23]
+        - list [ref=f23e24]:
+          - listitem [ref=f23e25]:
+            - generic [ref=f23e26]: 07:19
+            - generic [ref=f23e27]:
+              - strong [ref=f23e28]: 起床
+              - paragraph [ref=f23e29]: 洗顔、飲水、水筒用意
+              - generic [ref=f23e30]: daily
+          - listitem [ref=f23e31]:
+            - generic [ref=f23e32]: 07:20 – 08:00
+            - generic [ref=f23e33]:
+              - strong [ref=f23e34]: AM-HK
+              - generic [ref=f23e35]: daily
+          - listitem [ref=f23e36]:
+            - generic [ref=f23e37]: 08:10 – 08:30
+            - generic [ref=f23e38]:
+              - strong [ref=f23e39]: スケジューリング
+              - paragraph [ref=f23e40]: newsチェック(10min), lifeスケジュールfix, 業務スケジュールfix, 朝英語
+              - generic [ref=f23e41]: daily
+          - listitem [ref=f23e42]:
+            - generic [ref=f23e43]: 19:30 – 20:30
+            - generic [ref=f23e44]:
+              - strong [ref=f23e45]: アレン飯
+              - generic [ref=f23e46]: calendar
+          - listitem [ref=f23e47]:
+            - generic [ref=f23e48]: 20:30 – 21:00
+            - generic [ref=f23e49]:
+              - strong [ref=f23e50]: 夕飯
+              - paragraph [ref=f23e51]: nosh
+              - generic [ref=f23e52]: daily
+          - listitem [ref=f23e53]:
+            - generic [ref=f23e54]: 22:00 – 23:40
+            - generic [ref=f23e55]:
+              - strong [ref=f23e56]: PM-HK
+              - generic [ref=f23e57]: daily
+          - listitem [ref=f23e58]:
+            - generic [ref=f23e59]: 00:00
+            - generic [ref=f23e60]:
+              - strong [ref=f23e61]: 就寝
+              - generic [ref=f23e62]: daily
+          - listitem [ref=f23e63]:
+            - generic [ref=f23e64]: —
+            - generic [ref=f23e65]:
+              - strong [ref=f23e66]: スケジューラー
+              - generic [ref=f23e67]: task
+          - listitem [ref=f23e68]:
+            - generic [ref=f23e69]: —
+            - generic [ref=f23e70]:
+              - strong [ref=f23e71]: スーツ返却
+              - generic [ref=f23e72]: task
+          - listitem [ref=f23e73]:
+            - generic [ref=f23e74]: —
+            - generic [ref=f23e75]:
+              - strong [ref=f23e76]: 天気・洗剤残量チェック
+              - generic [ref=f23e77]: daily
+              - generic [ref=f23e78]: ↳ AM-HK
+          - listitem [ref=f23e79]:
+            - generic [ref=f23e80]: —
+            - generic [ref=f23e81]:
+              - strong [ref=f23e82]: 洗濯開始
+              - generic [ref=f23e83]: daily
+              - generic [ref=f23e84]: ↳ AM-HK
+          - listitem [ref=f23e85]:
+            - generic [ref=f23e86]: —
+            - generic [ref=f23e87]:
+              - strong [ref=f23e88]: (干物取り込み)
+              - generic [ref=f23e89]: daily
+              - generic [ref=f23e90]: ↳ AM-HK
+          - listitem [ref=f23e91]:
+            - generic [ref=f23e92]: —
+            - generic [ref=f23e93]:
+              - strong [ref=f23e94]: 朝食
+              - paragraph [ref=f23e95]: ブラン40g(カップ~150ml), 味噌汁, 卵, 水多め
+              - generic [ref=f23e96]: daily
+              - generic [ref=f23e97]: ↳ AM-HK
+          - listitem [ref=f23e98]:
+            - generic [ref=f23e99]: —
+            - generic [ref=f23e100]:
+              - strong [ref=f23e101]: 簡易食器洗い
+              - generic [ref=f23e102]: daily
+              - generic [ref=f23e103]: ↳ AM-HK
+          - listitem [ref=f23e104]:
+            - generic [ref=f23e105]: —
+            - generic [ref=f23e106]:
+              - strong [ref=f23e107]: 物干し
+              - generic [ref=f23e108]: daily
+              - generic [ref=f23e109]: ↳ AM-HK
+          - listitem [ref=f23e110]:
+            - generic [ref=f23e111]: —
+            - generic [ref=f23e112]:
+              - strong [ref=f23e113]: 掃除機
+              - generic [ref=f23e114]: daily
+              - generic [ref=f23e115]: ↳ AM-HK
+          - listitem [ref=f23e116]:
+            - generic [ref=f23e117]: —
+            - generic [ref=f23e118]:
+              - strong [ref=f23e119]: 可燃・不燃・電池ごみ
+              - generic [ref=f23e120]: daily
+              - generic [ref=f23e121]: ↳ AM-HK
+          - listitem [ref=f23e122]:
+            - generic [ref=f23e123]: —
+            - generic [ref=f23e124]:
+              - strong [ref=f23e125]: 着替え
+              - generic [ref=f23e126]: daily
+              - generic [ref=f23e127]: ↳ AM-HK
+          - listitem [ref=f23e128]:
+            - generic [ref=f23e129]: —
+            - generic [ref=f23e130]:
+              - strong [ref=f23e131]: グルーミング
+              - generic [ref=f23e132]: daily
+              - generic [ref=f23e133]: ↳ AM-HK
+          - listitem [ref=f23e134]:
+            - generic [ref=f23e135]: —
+            - generic [ref=f23e136]:
+              - strong [ref=f23e137]: 入浴
+              - generic [ref=f23e138]: daily
+              - generic [ref=f23e139]: ↳ PM-HK
+          - listitem [ref=f23e140]:
+            - generic [ref=f23e141]: —
+            - generic [ref=f23e142]:
+              - strong [ref=f23e143]: (干物取り込み)
+              - generic [ref=f23e144]: daily
+              - generic [ref=f23e145]: ↳ PM-HK
+          - listitem [ref=f23e146]:
+            - generic [ref=f23e147]: —
+            - generic [ref=f23e148]:
+              - strong [ref=f23e149]: 着替え用意
+              - generic [ref=f23e150]: daily
+              - generic [ref=f23e151]: ↳ PM-HK
+          - listitem [ref=f23e152]:
+            - generic [ref=f23e153]: —
+            - generic [ref=f23e154]:
+              - strong [ref=f23e155]: 翌朝食準備
+              - generic [ref=f23e156]: daily
+              - generic [ref=f23e157]: ↳ PM-HK
+          - listitem [ref=f23e158]:
+            - generic [ref=f23e159]: —
+            - generic [ref=f23e160]:
+              - strong [ref=f23e161]: 食器洗い
+              - generic [ref=f23e162]: daily
+              - generic [ref=f23e163]: ↳ PM-HK
+          - listitem [ref=f23e164]:
+            - generic [ref=f23e165]: —
+            - generic [ref=f23e166]:
+              - strong [ref=f23e167]: 爪
+              - generic [ref=f23e168]: daily
+              - generic [ref=f23e169]: ↳ PM-HK
+          - listitem [ref=f23e170]:
+            - generic [ref=f23e171]: —
+            - generic [ref=f23e172]:
+              - strong [ref=f23e173]: 翌日スケジューリング
+              - generic [ref=f23e174]: daily
+              - generic [ref=f23e175]: ↳ PM-HK
+          - listitem [ref=f23e176]:
+            - generic [ref=f23e177]: —
+            - generic [ref=f23e178]:
+              - strong [ref=f23e179]: 入眠準備
+              - generic [ref=f23e180]: daily
+              - generic [ref=f23e181]: ↳ PM-HK
+          - listitem [ref=f23e182]:
+            - generic [ref=f23e183]: —
+            - generic [ref=f23e184]:
+              - strong [ref=f23e185]: グルーミング
+              - generic [ref=f23e186]: daily
+              - generic [ref=f23e187]: ↳ PM-HK
+      - generic [ref=f23e188]:
+        - heading "編集" [level=2] [ref=f23e189]
+        - generic [ref=f23e190]:
+          - generic [ref=f23e191]:
+            - textbox "タスク名" [ref=f23e192]: 起床
+            - textbox [ref=f23e193]: 2026-07-06T07:19
+            - textbox [ref=f23e194]
+            - button "削除" [ref=f23e195] [cursor=pointer]
+          - generic [ref=f23e196]:
+            - textbox "タスク名" [ref=f23e197]: AM-HK
+            - textbox [ref=f23e198]: 2026-07-06T07:20
+            - textbox [ref=f23e199]: 2026-07-06T08:00
+            - button "削除" [ref=f23e200] [cursor=pointer]
+          - generic [ref=f23e201]:
+            - textbox "タスク名" [ref=f23e202]: 天気・洗剤残量チェック
+            - textbox [ref=f23e203]
+            - textbox [ref=f23e204]
+            - button "削除" [ref=f23e205] [cursor=pointer]
+          - generic [ref=f23e206]:
+            - textbox "タスク名" [ref=f23e207]: 洗濯開始
+            - textbox [ref=f23e208]
+            - textbox [ref=f23e209]
+            - button "削除" [ref=f23e210] [cursor=pointer]
+          - generic [ref=f23e211]:
+            - textbox "タスク名" [ref=f23e212]: (干物取り込み)
+            - textbox [ref=f23e213]
+            - textbox [ref=f23e214]
+            - button "削除" [ref=f23e215] [cursor=pointer]
+          - generic [ref=f23e216]:
+            - textbox "タスク名" [ref=f23e217]: 朝食
+            - textbox [ref=f23e218]
+            - textbox [ref=f23e219]
+            - button "削除" [ref=f23e220] [cursor=pointer]
+          - generic [ref=f23e221]:
+            - textbox "タスク名" [ref=f23e222]: 簡易食器洗い
+            - textbox [ref=f23e223]
+            - textbox [ref=f23e224]
+            - button "削除" [ref=f23e225] [cursor=pointer]
+          - generic [ref=f23e226]:
+            - textbox "タスク名" [ref=f23e227]: 物干し
+            - textbox [ref=f23e228]
+            - textbox [ref=f23e229]
+            - button "削除" [ref=f23e230] [cursor=pointer]
+          - generic [ref=f23e231]:
+            - textbox "タスク名" [ref=f23e232]: 掃除機
+            - textbox [ref=f23e233]
+            - textbox [ref=f23e234]
+            - button "削除" [ref=f23e235] [cursor=pointer]
+          - generic [ref=f23e236]:
+            - textbox "タスク名" [ref=f23e237]: 可燃・不燃・電池ごみ
+            - textbox [ref=f23e238]
+            - textbox [ref=f23e239]
+            - button "削除" [ref=f23e240] [cursor=pointer]
+          - generic [ref=f23e241]:
+            - textbox "タスク名" [ref=f23e242]: 着替え
+            - textbox [ref=f23e243]
+            - textbox [ref=f23e244]
+            - button "削除" [ref=f23e245] [cursor=pointer]
+          - generic [ref=f23e246]:
+            - textbox "タスク名" [ref=f23e247]: グルーミング
+            - textbox [ref=f23e248]
+            - textbox [ref=f23e249]
+            - button "削除" [ref=f23e250] [cursor=pointer]
+          - generic [ref=f23e251]:
+            - textbox "タスク名" [ref=f23e252]: スケジューリング
+            - textbox [ref=f23e253]: 2026-07-06T08:10
+            - textbox [ref=f23e254]: 2026-07-06T08:30
+            - button "削除" [ref=f23e255] [cursor=pointer]
+          - generic [ref=f23e256]:
+            - textbox "タスク名" [ref=f23e257]: 夕飯
+            - textbox [ref=f23e258]: 2026-07-06T20:30
+            - textbox [ref=f23e259]: 2026-07-06T21:00
+            - button "削除" [ref=f23e260] [cursor=pointer]
+          - generic [ref=f23e261]:
+            - textbox "タスク名" [ref=f23e262]: PM-HK
+            - textbox [ref=f23e263]: 2026-07-06T22:00
+            - textbox [ref=f23e264]: 2026-07-06T23:40
+            - button "削除" [ref=f23e265] [cursor=pointer]
+          - generic [ref=f23e266]:
+            - textbox "タスク名" [ref=f23e267]: 入浴
+            - textbox [ref=f23e268]
+            - textbox [ref=f23e269]
+            - button "削除" [ref=f23e270] [cursor=pointer]
+          - generic [ref=f23e271]:
+            - textbox "タスク名" [ref=f23e272]: (干物取り込み)
+            - textbox [ref=f23e273]
+            - textbox [ref=f23e274]
+            - button "削除" [ref=f23e275] [cursor=pointer]
+          - generic [ref=f23e276]:
+            - textbox "タスク名" [ref=f23e277]: 着替え用意
+            - textbox [ref=f23e278]
+            - textbox [ref=f23e279]
+            - button "削除" [ref=f23e280] [cursor=pointer]
+          - generic [ref=f23e281]:
+            - textbox "タスク名" [ref=f23e282]: 翌朝食準備
+            - textbox [ref=f23e283]
+            - textbox [ref=f23e284]
+            - button "削除" [ref=f23e285] [cursor=pointer]
+          - generic [ref=f23e286]:
+            - textbox "タスク名" [ref=f23e287]: 食器洗い
+            - textbox [ref=f23e288]
+            - textbox [ref=f23e289]
+            - button "削除" [ref=f23e290] [cursor=pointer]
+          - generic [ref=f23e291]:
+            - textbox "タスク名" [ref=f23e292]: 爪
+            - textbox [ref=f23e293]
+            - textbox [ref=f23e294]
+            - button "削除" [ref=f23e295] [cursor=pointer]
+          - generic [ref=f23e296]:
+            - textbox "タスク名" [ref=f23e297]: 翌日スケジューリング
+            - textbox [ref=f23e298]
+            - textbox [ref=f23e299]
+            - button "削除" [ref=f23e300] [cursor=pointer]
+          - generic [ref=f23e301]:
+            - textbox "タスク名" [ref=f23e302]: 入眠準備
+            - textbox [ref=f23e303]
+            - textbox [ref=f23e304]
+            - button "削除" [ref=f23e305] [cursor=pointer]
+          - generic [ref=f23e306]:
+            - textbox "タスク名" [ref=f23e307]: グルーミング
+            - textbox [ref=f23e308]
+            - textbox [ref=f23e309]
+            - button "削除" [ref=f23e310] [cursor=pointer]
+          - generic [ref=f23e311]:
+            - textbox "タスク名" [ref=f23e312]: 就寝
+            - textbox [ref=f23e313]: 2026-07-07T00:00
+            - textbox [ref=f23e314]
+            - button "削除" [ref=f23e315] [cursor=pointer]
+          - button "タスク追加" [ref=f23e316] [cursor=pointer]
+      - button "Google に登録" [ref=f23e317] [cursor=pointer]
+      - link "← 戻る" [ref=f23e318] [cursor=pointer]:
+        - /url: /
+  - navigation [ref=f23e11]:
+    - link "ホーム" [ref=f23e12] [cursor=pointer]:
+      - /url: /
+    - link "設定" [ref=f23e13] [cursor=pointer]:
+      - /url: /settings

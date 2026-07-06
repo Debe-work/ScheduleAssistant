@@ -1202,11 +1202,6 @@
     "@eslint/core" "^0.17.0"
     levn "^0.4.1"
 
-"@google/generative-ai@^0.24.0":
-  version "0.24.1"
-  resolved "https://registry.yarnpkg.com/@google/generative-ai/-/generative-ai-0.24.1.tgz#634a3c06f8ea7a6125c1b0d6c1e66bb11afb52c9"
-  integrity sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==
-
 "@humanfs/core@^0.19.2":
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.2.tgz#a8272ca03b2acf492670222b2320b6c421bfde60"
@@ -1439,6 +1434,14 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
+
+"@playwright/mcp@^0.0.77":
+  version "0.0.77"
+  resolved "https://registry.yarnpkg.com/@playwright/mcp/-/mcp-0.0.77.tgz#6d9ce7be71059359df2c9078f56fefdc9d04efb7"
+  integrity sha512-vf3PmCdOWVvEc3Vmh8DVWvsbz6/rIGi+OG0cyC/2YTn10U8tZMHEiRG62LHdPTTf0qCjoS7/1mbyS5F0RHoTzQ==
+  dependencies:
+    playwright "1.62.0-alpha-2026-06-29"
+    playwright-core "1.62.0-alpha-2026-06-29"
 
 "@poppinss/colors@^4.1.5":
   version "4.1.6"
@@ -2597,6 +2600,11 @@ fs-extra@^9.0.1:
     jsonfile "^6.0.1"
     universalify "^2.0.0"
 
+fsevents@2.3.2:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
+  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
+
 fsevents@2.3.3, fsevents@~2.3.2, fsevents@~2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
@@ -3329,6 +3337,20 @@ picomatch@^4.0.2, picomatch@^4.0.4:
   version "4.0.5"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-4.0.5.tgz#51ea57a17d86f605f81039595fbc40ed06a55fab"
   integrity sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==
+
+playwright-core@1.62.0-alpha-2026-06-29:
+  version "1.62.0-alpha-2026-06-29"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.62.0-alpha-2026-06-29.tgz#02e470226c880767182bf16c177af9af0a668c58"
+  integrity sha512-/13EvW8l9Bmvt9nKHey+OcvZ8nob2FM8BCKBsUNwbXgmT4Hc0XX2b6mOErU0RBYNedOCa9q15USI7SY9K17v4w==
+
+playwright@1.62.0-alpha-2026-06-29:
+  version "1.62.0-alpha-2026-06-29"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.62.0-alpha-2026-06-29.tgz#165ef915b76ec976446241db5235f42fca7a259f"
+  integrity sha512-ugaMuh6rAOqmbaxrM7+XQSs7M6yPXykq5gVugJPClHcJ4Cqxmky5rDHhrCt4wmaILUeMdI7kPBCx3zMx2Qu+bg==
+  dependencies:
+    playwright-core "1.62.0-alpha-2026-06-29"
+  optionalDependencies:
+    fsevents "2.3.2"
 
 possible-typed-array-names@^1.0.0, possible-typed-array-names@^1.1.0:
   version "1.1.0"
