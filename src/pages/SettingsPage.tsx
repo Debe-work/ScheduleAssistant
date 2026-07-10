@@ -61,12 +61,12 @@ export function SettingsPage() {
         <h2>認証</h2>
         {authed === null && <p>確認中…</p>}
         {authed === true && (
-          <>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <p className="status-ok">Google アカウント連携済み</p>
             <button type="button" className="btn btn-secondary" onClick={handleLogout}>
               ログアウト
             </button>
-          </>
+          </div>
         )}
         {authed === false && (
           <button type="button" className="btn btn-primary" onClick={() => login()}>
