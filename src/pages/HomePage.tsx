@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '../components/DatePicker';
 import { todayString } from '../utils/date';
-import { isAuthenticated, startLogin } from '../services/googleAuth';
+import { toErrorMessage } from '../utils/errors';
+import { useAuth } from '../hooks/useAuth';
 import { fetchCalendarEvents } from '../services/googleCalendar';
 import { fetchTasks } from '../services/googleTasks';
 import { loadTemplates } from '../services/templateLoader';
@@ -13,16 +14,10 @@ import type { GeneratedSchedule } from '../types';
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { authed, login } = useAuth();
   const [date, setDate] = useState(todayString());
-  const [authed, setAuthed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    isAuthenticated()
-      .then(setAuthed)
-      .catch(() => setAuthed(false));
-  }, []);
 
   const handleGenerate = async () => {
     setError(null);
@@ -47,7 +42,7 @@ export function HomePage() {
       saveScheduleDraft({ schedule, calendarEvents, tasks: tasksWithSchedules });
       navigate('/preview');
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -61,7 +56,7 @@ export function HomePage() {
       <DatePicker value={date} onChange={setDate} />
 
       {authed === false && (
-        <button type="button" className="btn btn-primary btn-block" onClick={() => startLogin()}>
+        <button type="button" className="btn btn-primary btn-block" onClick={() => login()}>
           Google アカウント連携
         </button>
       )}

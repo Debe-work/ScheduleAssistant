@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HelpHint } from '../components/HelpHint';
-import { areAllTimelineCardsExpanded, ScheduleTimeline } from '../components/ScheduleTimeline';
+import { ScheduleTimeline } from '../components/ScheduleTimeline';
 import { loadScheduleDraft, saveScheduleDraft, type ScheduleDraft } from '../storage/scheduleDraft';
 import { registerSchedule } from '../services/scheduleRegister';
 import type { GeneratedSchedule } from '../types';
 import { formatScheduleDateLabel, parseScheduleDateParts } from '../utils/date';
+import { toErrorMessage } from '../utils/errors';
 import { splitJapaneseSentences } from '../utils/text';
+import { areAllTimelineCardsExpanded } from '../utils/timelineExpansion';
 
 export function PreviewPage() {
   const navigate = useNavigate();
@@ -31,34 +33,28 @@ export function PreviewPage() {
     setDraft(loaded);
   }, [navigate]);
 
-  const handleItemsChange = (items: GeneratedSchedule['items']) => {
+  const updateDraft = (updater: (draft: ScheduleDraft) => ScheduleDraft) => {
     setDraft((prev) => {
       if (!prev) return prev;
-      const next: ScheduleDraft = {
-        ...prev,
-        schedule: { ...prev.schedule, items },
-      };
+      const next = updater(prev);
       saveScheduleDraft(next);
       return next;
     });
+  };
+
+  const handleItemsChange = (items: GeneratedSchedule['items']) => {
+    updateDraft((prev) => ({
+      ...prev,
+      schedule: { ...prev.schedule, items },
+    }));
   };
 
   const handleTasksChange = (tasks: ScheduleDraft['tasks']) => {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next: ScheduleDraft = { ...prev, tasks };
-      saveScheduleDraft(next);
-      return next;
-    });
+    updateDraft((prev) => ({ ...prev, tasks }));
   };
 
   const handleCalendarChange = (calendarEvents: ScheduleDraft['calendarEvents']) => {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next: ScheduleDraft = { ...prev, calendarEvents };
-      saveScheduleDraft(next);
-      return next;
-    });
+    updateDraft((prev) => ({ ...prev, calendarEvents }));
   };
 
   const handleRegister = async () => {
@@ -78,7 +74,7 @@ export function PreviewPage() {
           (res.warnings.length ? `\n警告: ${res.warnings.join(', ')}` : ''),
       );
     } catch (e) {
-      setResult(e instanceof Error ? e.message : String(e));
+      setResult(toErrorMessage(e));
     } finally {
       setRegistering(false);
     }

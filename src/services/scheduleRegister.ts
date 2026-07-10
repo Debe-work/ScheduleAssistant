@@ -1,4 +1,7 @@
 import type { GeneratedSchedule, ScheduleItem } from '../types';
+import { toErrorMessage } from '../utils/errors';
+import { formatTimeRange } from '../utils/time';
+import { groupDailyItems } from '../utils/scheduleItems';
 import { createCalendarEvent, ensureScheduleAssistantCalendar, findOverlaps, updateCalendarEvent } from './googleCalendar';
 import { createTask, updateTask } from './googleTasks';
 
@@ -11,49 +14,6 @@ export type RegisterResult = {
   errors: string[];
   warnings: string[];
 };
-
-function groupDailyItems(items: ScheduleItem[]): {
-  topLevel: ScheduleItem[];
-  childrenByParent: Map<string, ScheduleItem[]>;
-} {
-  const parentTitles = new Set(items.filter((i) => !i.parentName).map((i) => i.title));
-  const childrenByParent = new Map<string, ScheduleItem[]>();
-  const topLevel: ScheduleItem[] = [];
-
-  for (const item of items) {
-    if (item.parentName && parentTitles.has(item.parentName)) {
-      const list = childrenByParent.get(item.parentName) ?? [];
-      list.push(item);
-      childrenByParent.set(item.parentName, list);
-    } else {
-      topLevel.push(item);
-    }
-  }
-
-  for (const list of childrenByParent.values()) {
-    list.sort((a, b) => {
-      if (!a.startTime) return 1;
-      if (!b.startTime) return -1;
-      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-    });
-  }
-
-  return { topLevel, childrenByParent };
-}
-
-function formatTime(iso?: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatTimeRange(item: ScheduleItem): string {
-  if (!item.startTime) return '';
-  const start = formatTime(item.startTime);
-  const end = item.endTime ? formatTime(item.endTime) : '';
-  return end ? `${start}-${end}` : start;
-}
 
 function buildCalendarDescription(item: ScheduleItem, children: ScheduleItem[] = []): string {
   const lines = ['Created by Schedule Assistant'];
@@ -102,7 +62,7 @@ export async function registerSchedule(
       await updateCalendarEvent(item);
       result.calendarUpdated++;
     } catch (e) {
-      result.errors.push(e instanceof Error ? e.message : String(e));
+      result.errors.push(toErrorMessage(e));
     }
   }
 
@@ -119,7 +79,7 @@ export async function registerSchedule(
         result.calendarCreated++;
       }
     } catch (e) {
-      result.errors.push(e instanceof Error ? e.message : String(e));
+      result.errors.push(toErrorMessage(e));
     }
   }
 
@@ -131,7 +91,7 @@ export async function registerSchedule(
 
   for (const parent of topLevel) {
     try {
-      const children = childrenByParent.get(parent.title) ?? [];
+      const children = (childrenByParent.get(parent.title) ?? []).map(({ item }) => item);
       if (calendarId && hasCalendarTime(parent)) {
         await createCalendarEvent(parent, calendarId, buildCalendarDescription(parent, children));
         result.calendarCreated++;
@@ -158,7 +118,7 @@ export async function registerSchedule(
         result.tasksCreated++;
       }
     } catch (e) {
-      result.errors.push(e instanceof Error ? e.message : String(e));
+      result.errors.push(toErrorMessage(e));
     }
   }
 
