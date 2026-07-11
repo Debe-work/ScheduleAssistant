@@ -62,10 +62,21 @@ export function SettingsPage() {
         {authed === null && <p>確認中…</p>}
         {authed === true && (
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <p className="status-ok">Google アカウント連携済み</p>
-            <button type="button" className="btn btn-secondary" onClick={handleLogout}>
-              ログアウト
+            <p className="status-ok">Googleアカウント連携済</p>
+            <button
+              type="button"
+              className="btn btn-icon"
+              onClick={handleLogout}
+              title="ログアウト"
+              aria-label="ログアウト"
+            >
+              {/* SVGアイコン例：ログアウト */}
+              <svg width="44" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M16 17v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 12h10m0 0l-3-3m3 3l-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
+       
           </div>
         )}
         {authed === false && (
