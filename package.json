@@ -3,17 +3,21 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "worker:dev": "node scripts/worker-dev.mjs",
     "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
     "worker:typecheck": "tsc -p worker/tsconfig.json",
-    "prebuild": "mkdir -p public/templates && cp templates/daily-tasks.md public/templates/daily-tasks.md",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ci": "yarn lint && yarn test && yarn worker:typecheck && GITHUB_PAGES=true VITE_WORKER_BASE_URL=https://worker.example yarn build",
+    "ci:install": "yarn install --frozen-lockfile"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",

@@ -144,6 +144,6 @@ GITHUB_PAGES=true yarn build
 テンプレートは **現時点ではリポジトリ内に同梱しているだけ** です。将来は GitHub の特定リポジトリや Google Drive など、別の場所から取得する構成に切り替える可能性があります。
 
 - スキーマ: [daily-task_template_proto.md](daily-task_template_proto.md)
-- 編集元（暫定）: [templates/daily-tasks.md](templates/daily-tasks.md)
+- テンプレート本体: [public/templates/daily-tasks.md](public/templates/daily-tasks.md)
 
-現実装では、アプリは実行時に `public/templates/daily-tasks.md` を fetch します（`src/services/templateLoader.ts`）。`yarn build` の prebuild で `templates/daily-tasks.md` から自動コピーされます。開発中に `templates/` を編集した場合は、同ファイルを `public/templates/` にコピーするか `yarn prebuild` を実行してください。
+アプリは実行時に `public/templates/daily-tasks.md` を fetch します（`src/services/templateLoader.ts`）。テンプレートを編集するときはこのファイルを直接更新してください。

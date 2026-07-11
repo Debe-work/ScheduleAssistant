@@ -1,6 +1,6 @@
 # デイリータスクテンプレート
 
-スキーマ定義: [daily-task_template_proto.md](../daily-task_template_proto.md)
+スキーマ定義: [daily-task_template_proto.md](../../daily-task_template_proto.md)
 
 ```yaml
 schema_version: 1
@@ -27,7 +27,7 @@ tasks:
     children:
       - name: 天気・洗剤残量チェック
       - name: 洗濯開始
-      - name: (干物取り込み)
+      - name: (朝-干物取り込み)
       - name: 朝食
         detail: ブラン40g(カップ~150ml), 味噌汁, 卵, 水多め
       - name: 簡易食器洗い
@@ -76,7 +76,7 @@ tasks:
     children:
       - name: 入浴
         condition: 登録日が月曜日
-      - name: (干物取り込み)
+      - name: (夜-干物取り込み)
       - name: 着替え用意
       - name: 翌朝食準備
       - name: 食器洗い

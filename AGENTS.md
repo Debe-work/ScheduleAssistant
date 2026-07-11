@@ -21,7 +21,7 @@ Schedule Assistant is a single product: a React 19 + Vite PWA frontend plus a Cl
 - Full end-to-end schedule generation (login → fetch Calendar/Tasks → Gemini) requires the real Google OAuth client and Gemini API key.
 
 ### Templates
-- The app fetches `public/templates/daily-tasks.md` at runtime. The `prebuild` script copies it from `templates/daily-tasks.md` on `yarn build`. If you edit `templates/daily-tasks.md` during dev, also copy it into `public/templates/` (or run `yarn prebuild`) for the dev server to pick it up.
+- The app fetches `public/templates/daily-tasks.md` at runtime. Edit that file directly; there is no separate copy step.
 
 ### Checks
 - Lint: `yarn lint` (one pre-existing `react-refresh` warning in `ScheduleTimeline.tsx`, 0 errors). Tests: `yarn test` (Vitest). Worker types: `yarn worker:typecheck`. Build: `yarn build`.
