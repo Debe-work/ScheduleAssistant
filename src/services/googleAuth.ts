@@ -1,4 +1,9 @@
 import { buildWorkerUrl, readWorkerError, workerFetch } from './workerClient';
+import {
+  captureSessionTokenFromUrl,
+  clearSessionToken,
+  SESSION_QUERY_PARAM,
+} from './sessionToken';
 
 type SessionResponse = {
   authenticated: boolean;
@@ -18,8 +23,10 @@ function clearAccessTokenCache(): void {
 
 export async function startLogin(): Promise<void> {
   clearAccessTokenCache();
+  clearSessionToken();
   const returnTo = new URL(window.location.href);
   returnTo.searchParams.delete('authError');
+  returnTo.searchParams.delete(SESSION_QUERY_PARAM);
   const loginUrl = new URL(buildWorkerUrl('/api/google/login'), window.location.href);
   loginUrl.searchParams.set('returnTo', returnTo.toString());
   window.location.href = loginUrl.toString();
@@ -33,6 +40,7 @@ export async function getAccessToken(): Promise<string | null> {
   const res = await workerFetch('/api/google/access-token');
   if (res.status === 401) {
     clearAccessTokenCache();
+    clearSessionToken();
     return null;
   }
   if (!res.ok) {
@@ -45,6 +53,8 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
+  captureSessionTokenFromUrl();
+
   if (accessTokenCache && Date.now() < accessTokenCache.expiresAt - 60_000) {
     return true;
   }
@@ -55,13 +65,20 @@ export async function isAuthenticated(): Promise<boolean> {
   }
 
   const data = await res.json() as SessionResponse;
+  if (!data.authenticated) {
+    clearSessionToken();
+  }
   return data.authenticated;
 }
 
 export async function logout(): Promise<void> {
   clearAccessTokenCache();
-  const res = await workerFetch('/api/google/logout', { method: 'POST' });
-  if (!res.ok) {
-    throw new Error(await readWorkerError(res, '認証 API エラー'));
+  try {
+    const res = await workerFetch('/api/google/logout', { method: 'POST' });
+    if (!res.ok) {
+      throw new Error(await readWorkerError(res, '認証 API エラー'));
+    }
+  } finally {
+    clearSessionToken();
   }
 }

@@ -7,6 +7,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/tasks',
 ].join(' ');
 const SESSION_COOKIE_NAME = 'schedule_assistant_session';
+/** Passed back to the SPA after OAuth so iOS can auth without third-party cookies. */
+const SESSION_QUERY_PARAM = 'sa_session';
 const AUTH_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const ACCESS_TOKEN_SKEW_MS = 60 * 1000;
@@ -234,10 +236,16 @@ async function handleCallback(request: Request, env: Env): Promise<Response> {
     updatedAt: now,
   });
 
+  const signedSession = await signSessionId(sessionId, env);
+  const redirectUrl = new URL(transaction.returnTo);
+  redirectUrl.searchParams.delete('authError');
+  redirectUrl.searchParams.set(SESSION_QUERY_PARAM, signedSession);
+
   return new Response(null, {
     status: 302,
     headers: {
-      Location: transaction.returnTo,
+      Location: redirectUrl.toString(),
+      // Kept for same-site / desktop browsers; iOS blocks this cross-site cookie.
       'Set-Cookie': await buildSessionCookie(request, env, sessionId),
     },
   });
@@ -644,15 +652,32 @@ function validateGeneratedScheduleItem(value: unknown): ScheduleItem {
   return item;
 }
 
-async function resolveSession(request: Request, env: Env): Promise<ResolvedSession> {
+function readSessionCredential(request: Request): { value: string; fromCookie: boolean } | null {
+  const authorization = request.headers.get('Authorization');
+  if (authorization) {
+    const match = /^Bearer\s+(\S+)/i.exec(authorization.trim());
+    if (match?.[1]) {
+      return { value: match[1], fromCookie: false };
+    }
+  }
+
   const cookieValue = parseCookies(request.headers.get('Cookie') ?? '')[SESSION_COOKIE_NAME];
-  if (!cookieValue) {
+  if (cookieValue) {
+    return { value: cookieValue, fromCookie: true };
+  }
+
+  return null;
+}
+
+async function resolveSession(request: Request, env: Env): Promise<ResolvedSession> {
+  const credential = readSessionCredential(request);
+  if (!credential) {
     return { sessionId: null, session: null, clearCookie: false };
   }
 
-  const sessionId = await verifySessionCookie(cookieValue, env);
+  const sessionId = await verifySessionToken(credential.value, env);
   if (!sessionId) {
-    return { sessionId: null, session: null, clearCookie: true };
+    return { sessionId: null, session: null, clearCookie: credential.fromCookie };
   }
 
   const stored = await getSession(env, sessionId);
@@ -775,8 +800,7 @@ function sanitizeReturnTo(returnTo: string | null, env: Env): string {
 
   try {
     const url = new URL(returnTo);
-    const allowedOrigins = getAllowedOrigins(env);
-    if (!allowedOrigins.includes(url.origin)) {
+    if (!isAllowedOrigin(url.origin, env)) {
       return fallback;
     }
     if (!['http:', 'https:'].includes(url.protocol)) {
@@ -788,19 +812,32 @@ function sanitizeReturnTo(returnTo: string | null, env: Env): string {
   }
 }
 
+/** Normalize origin strings so hostname casing does not break allow-list checks. */
+function normalizeOrigin(origin: string): string | null {
+  try {
+    return new URL(origin.trim()).origin;
+  } catch {
+    return null;
+  }
+}
+
 function getAllowedOrigins(env: Env): string[] {
   return (env.APP_ORIGINS ?? '')
     .split(',')
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean);
+    .map((origin) => normalizeOrigin(origin))
+    .filter((origin): origin is string => Boolean(origin));
+}
+
+function isAllowedOrigin(origin: string, env: Env): boolean {
+  const normalized = normalizeOrigin(origin);
+  return normalized !== null && getAllowedOrigins(env).includes(normalized);
 }
 
 /** Reject cross-site POSTs that would still send SameSite=None cookies. */
 function assertAllowedBrowserOrigin(request: Request, env: Env): void {
-  const allowedOrigins = getAllowedOrigins(env);
   const origin = request.headers.get('Origin');
   if (origin) {
-    if (!allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+    if (!isAllowedOrigin(origin, env)) {
       throw new HttpError(403, '許可されていない Origin です');
     }
     return;
@@ -809,7 +846,7 @@ function assertAllowedBrowserOrigin(request: Request, env: Env): void {
   const referer = request.headers.get('Referer');
   if (referer) {
     try {
-      if (allowedOrigins.includes(new URL(referer).origin)) {
+      if (isAllowedOrigin(new URL(referer).origin, env)) {
         return;
       }
     } catch {
@@ -821,19 +858,28 @@ function assertAllowedBrowserOrigin(request: Request, env: Env): void {
 }
 
 function getDefaultAppUrl(env: Env): string {
-  return getAllowedOrigins(env)[0] ?? 'http://localhost:5173/';
+  const origins = getAllowedOrigins(env);
+  const preferred = origins.find((origin) => {
+    try {
+      const url = new URL(origin);
+      return url.protocol === 'https:' && !isLocalHostname(url.hostname);
+    } catch {
+      return false;
+    }
+  });
+  return preferred ?? origins[0] ?? 'http://localhost:5173/';
 }
 
 function buildCorsHeaders(request: Request, env: Env): HeadersInit {
   const headers = new Headers({
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     Vary: 'Origin',
   });
 
   const origin = request.headers.get('Origin');
-  if (origin && getAllowedOrigins(env).includes(origin.replace(/\/$/, ''))) {
+  if (origin && isAllowedOrigin(origin, env)) {
     headers.set('Access-Control-Allow-Origin', origin);
   }
 
@@ -938,7 +984,7 @@ async function signSessionId(sessionId: string, env: Env): Promise<string> {
   return `${sessionId}.${signature}`;
 }
 
-async function verifySessionCookie(value: string, env: Env): Promise<string | null> {
+async function verifySessionToken(value: string, env: Env): Promise<string | null> {
   const [sessionId, signature] = value.split('.');
   if (!sessionId || !signature) {
     return null;

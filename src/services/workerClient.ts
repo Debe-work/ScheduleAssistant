@@ -1,3 +1,5 @@
+import { getSessionToken } from './sessionToken';
+
 export function getWorkerBaseUrl(): string {
   return import.meta.env.VITE_WORKER_BASE_URL?.replace(/\/$/, '') ?? '';
 }
@@ -23,6 +25,11 @@ export async function workerFetch(path: string, init: RequestInit = {}): Promise
   const headers = new Headers(init.headers);
   if (init.method && init.method !== 'GET' && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  const sessionToken = getSessionToken();
+  if (sessionToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${sessionToken}`);
   }
 
   return fetch(buildWorkerUrl(path), {
