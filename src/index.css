@@ -250,39 +250,65 @@ select.input {
   padding-right: 2rem;
 }
 
-input[type='date'].input {
+.date-input-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+input[type='date'].date-input {
   color-scheme: light;
   min-height: 2.75rem;
   min-width: 0;
   max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   position: relative;
+  -webkit-appearance: none;
+  appearance: none;
   padding-right: 2.75rem;
 }
 
-input[type='date'].input::-webkit-datetime-edit-fields-wrapper {
+input[type='date'].date-input::-webkit-datetime-edit,
+input[type='date'].date-input::-webkit-datetime-edit-fields-wrapper,
+input[type='date'].date-input::-webkit-datetime-edit-text,
+input[type='date'].date-input::-webkit-datetime-edit-day-field,
+input[type='date'].date-input::-webkit-datetime-edit-month-field,
+input[type='date'].date-input::-webkit-datetime-edit-year-field {
   min-width: 0;
+  padding: 0;
 }
 
-input[type='date'].input::-webkit-date-and-time-value {
+input[type='date'].date-input::-webkit-date-and-time-value {
   min-width: 0;
   text-align: left;
 }
 
-input[type='date'].input::-webkit-calendar-picker-indicator {
+input[type='date'].date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 3rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.date-input-icon {
   position: absolute;
   right: 0.9375rem;
   top: 50%;
   transform: translateY(-50%);
   width: 1.125rem;
   height: 1.125rem;
-  opacity: 0.55;
-  cursor: pointer;
-  filter: hue-rotate(160deg) saturate(1.2);
-  flex-shrink: 0;
-}
-
-input[type='date'].input::-webkit-calendar-picker-indicator:hover {
-  opacity: 0.85;
+  color: var(--flow);
+  opacity: 0.65;
+  pointer-events: none;
 }
 
 /* ── Buttons ── */
