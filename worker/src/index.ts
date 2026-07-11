@@ -149,10 +149,12 @@ export default {
       }
 
       if (request.method === 'POST' && url.pathname === '/api/google/logout') {
+        assertAllowedBrowserOrigin(request, env);
         return handleLogout(request, env, ctx);
       }
 
       if (request.method === 'POST' && url.pathname === '/api/gemini/schedule') {
+        assertAllowedBrowserOrigin(request, env);
         return handleGenerateSchedule(request, env);
       }
 
@@ -791,6 +793,31 @@ function getAllowedOrigins(env: Env): string[] {
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
+}
+
+/** Reject cross-site POSTs that would still send SameSite=None cookies. */
+function assertAllowedBrowserOrigin(request: Request, env: Env): void {
+  const allowedOrigins = getAllowedOrigins(env);
+  const origin = request.headers.get('Origin');
+  if (origin) {
+    if (!allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      throw new HttpError(403, '許可されていない Origin です');
+    }
+    return;
+  }
+
+  const referer = request.headers.get('Referer');
+  if (referer) {
+    try {
+      if (allowedOrigins.includes(new URL(referer).origin)) {
+        return;
+      }
+    } catch {
+      // fall through to reject
+    }
+  }
+
+  throw new HttpError(403, 'Origin を確認できません');
 }
 
 function getDefaultAppUrl(env: Env): string {

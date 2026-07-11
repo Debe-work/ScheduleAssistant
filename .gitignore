@@ -34,3 +34,8 @@ dist-ssr
 # Cloudflare Workers
 worker/.dev.vars
 worker/.wrangler
+
+# Local browser / billing investigation artifacts
+.playwright-mcp/
+billing-screenshot.png
+mcp-billing-login.png

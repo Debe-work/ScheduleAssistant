@@ -62,10 +62,9 @@ openssl rand -hex 32   # TOKEN_ENCRYPTION_KEY
 1. [Cloudflare ダッシュボード](https://dash.cloudflare.com/sign-up) でアカウント作成（無料プランで可）
 2. ログイン後、左メニュー **Workers & Pages** を開く  
    → Worker の一覧・ログ・設定の画面です（AWS の Lambda コンソールに近い）
-3. ローカルで Cloudflare にログイン:
+3. ローカルで Cloudflare にログイン（リポジトリのルートで実行）:
 
 ```bash
-cd /Users/watanabemakoto/Documents/ScheduleAssistant
 yarn wrangler login
 # または: npx wrangler login
 ```
@@ -87,8 +86,7 @@ yarn wrangler whoami
 Cloudflare の **Secrets** は、Worker にだけ見える暗号化環境変数です。AWS の Secrets Manager / SSM を Lambda にバインドするイメージに近いです。値はダッシュボード上でも再表示されません。
 
 ```bash
-cd /Users/watanabemakoto/Documents/ScheduleAssistant
-
+# リポジトリのルートで実行
 yarn wrangler secret put GOOGLE_CLIENT_ID --config worker/wrangler.jsonc
 yarn wrangler secret put GOOGLE_CLIENT_SECRET --config worker/wrangler.jsonc
 yarn wrangler secret put SESSION_SECRET --config worker/wrangler.jsonc
