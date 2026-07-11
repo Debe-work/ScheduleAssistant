@@ -1,4 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#1a73e8">
-  <rect width="512" height="512" rx="96" fill="#e8f0fe"/>
-  <path d="M128 160h256v48H128zm0 96h256v48H128zm0 96h160v48H128z" fill="#1a73e8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Schedule Assistant">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="48" x2="416" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7fafc"/>
+      <stop offset="1" stop-color="#e8eef5"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- timeline spine -->
+  <rect x="148" y="148" width="20" height="216" rx="10" fill="#0e7490"/>
+  <!-- nodes -->
+  <circle cx="158" cy="176" r="22" fill="#0e7490"/>
+  <circle cx="158" cy="256" r="22" fill="#0e7490"/>
+  <circle cx="158" cy="336" r="22" fill="#0e7490"/>
+  <!-- schedule bars -->
+  <rect x="196" y="154" width="168" height="44" rx="22" fill="#0891b2"/>
+  <rect x="196" y="234" width="112" height="44" rx="22" fill="#0891b2"/>
+  <rect x="196" y="314" width="220" height="44" rx="22" fill="#0891b2"/>
 </svg>
