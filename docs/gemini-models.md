@@ -11,7 +11,7 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 
 | 項目 | 値 |
 |---|---|
-| 利用モデル | `gemini-2.5-flash` |
+| 利用モデル | `gemini-3.5-flash-lite` |
 | 呼び出し経路 | フロント → Worker `POST /api/gemini/schedule` → Gemini API |
 | 定義場所 | `worker/src/index.ts` の `GEMINI_GENERATE_URL` |
 | API キー | Worker secret `GEMINI_API_KEY`（フロントには公開しない） |
@@ -19,7 +19,7 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 ```ts
 // worker/src/index.ts
 const GEMINI_GENERATE_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
 ```
 
 ---
@@ -159,3 +159,4 @@ const GEMINI_GENERATE_URL =
 | 日付 | 内容 |
 |---|---|
 | 2026-07-26 | 初版作成。現行 `gemini-2.5-flash` と無料枠モデル一覧を整理 |
+| 2026-07-26 | 利用モデルを `gemini-3.5-flash-lite` に変更 |
