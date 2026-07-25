@@ -83,6 +83,7 @@ tasks:
       - name: 食器洗い
       - name: 爪
       - name: 翌日スケジューリング
+      - name: 歯磨き
       - name: 入眠準備
 
   - name: 就寝

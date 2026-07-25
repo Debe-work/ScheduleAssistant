@@ -1284,6 +1284,314 @@ input[type='date'].date-input::-webkit-calendar-picker-indicator {
   line-height: 1.55;
 }
 
+.register-error {
+  margin-top: 1.25rem;
+}
+
+/* ── Register result celebration ── */
+
+.register-result {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  padding: 1.25rem 1.125rem 1.125rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(8, 145, 178, 0.25);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.72) 45%, rgba(240, 248, 252, 0.9) 100%);
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  animation: register-result-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.register-result--partial {
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.55) 100%);
+  border-color: rgba(234, 88, 12, 0.28);
+}
+
+.register-result-glow {
+  position: absolute;
+  inset: -30% -10% auto;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(5, 150, 105, 0.18), transparent 68%);
+  pointer-events: none;
+}
+
+.register-result--partial .register-result-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(234, 88, 12, 0.14), transparent 68%);
+}
+
+.register-result-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.register-result-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+}
+
+.register-result-icon-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(5, 150, 105, 0.35);
+  animation: register-icon-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.register-result--partial .register-result-icon-ring {
+  border-color: rgba(234, 88, 12, 0.4);
+}
+
+.register-result-icon-mark {
+  position: relative;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--task);
+  animation: register-icon-mark 0.5s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.register-result--partial .register-result-icon-mark {
+  color: var(--calendar);
+}
+
+.register-result-eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--task);
+}
+
+.register-result--partial .register-result-eyebrow {
+  color: var(--calendar);
+}
+
+.register-result-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--ink) 10%, var(--task) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.register-result--partial .register-result-title {
+  background: linear-gradient(135deg, var(--ink) 10%, var(--calendar) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.register-result-subtitle {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.register-result-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: 0.625rem;
+}
+
+.register-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.78);
+  animation: register-stat-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.register-stat:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.register-stat:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.register-stat-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.register-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.register-stat-detail {
+  font-size: 0.625rem;
+  color: var(--ink-faint);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.register-stat--create .register-stat-value {
+  color: var(--task);
+}
+
+.register-stat--update .register-stat-value {
+  color: var(--flow-dark);
+}
+
+.register-stat--skip .register-stat-value {
+  color: var(--ink-faint);
+}
+
+.register-result-note {
+  position: relative;
+  z-index: 1;
+  margin: 0.875rem 0 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px dashed var(--border);
+}
+
+.register-result-alert {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+}
+
+.register-result-alert ul {
+  margin: 0.375rem 0 0;
+  padding-left: 1.125rem;
+}
+
+.register-result-alert li + li {
+  margin-top: 0.25rem;
+}
+
+.register-result-alert-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.register-result-alert--warning {
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.2);
+  color: #9a3412;
+}
+
+.register-result-alert--error {
+  background: var(--error-soft);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: var(--error);
+}
+
+.register-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.register-confetti-piece {
+  position: absolute;
+  top: -0.5rem;
+  border-radius: 1px;
+  opacity: 0;
+  animation-name: register-confetti-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: both;
+}
+
+@keyframes register-result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes register-icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes register-icon-mark {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes register-stat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes register-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 9rem, 0) rotate(var(--rotate, 180deg));
+  }
+}
+
 .link-back {
   display: inline-flex;
   align-items: center;

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HelpHint } from '../components/HelpHint';
 import { ScheduleTimeline } from '../components/ScheduleTimeline';
 import { loadScheduleDraft, saveScheduleDraft, type ScheduleDraft } from '../storage/scheduleDraft';
-import { registerSchedule } from '../services/scheduleRegister';
+import { RegisterResultPanel } from '../components/RegisterResultPanel';
+import { registerSchedule, type RegisterResult } from '../services/scheduleRegister';
 import type { GeneratedSchedule } from '../types';
 import { formatScheduleDateLabel, parseScheduleDateParts } from '../utils/date';
 import { toErrorMessage } from '../utils/errors';
@@ -14,7 +15,8 @@ export function PreviewPage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ScheduleDraft | null>(null);
   const [registering, setRegistering] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [registerResult, setRegisterResult] = useState<RegisterResult | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [expandedCardKeys, setExpandedCardKeys] = useState<string[]>([]);
   const [rowKeys, setRowKeys] = useState<string[]>([]);
 
@@ -62,19 +64,16 @@ export function PreviewPage() {
     if (!confirm('専用カレンダーと Google Todo に登録しますか？')) return;
 
     setRegistering(true);
-    setResult(null);
+    setRegisterResult(null);
+    setRegisterError(null);
     try {
       const res = await registerSchedule(draft.schedule, [
         ...draft.calendarEvents,
         ...draft.tasks,
       ]);
-      setResult(
-        `専用カレンダー作成: ${res.calendarCreated}件 / カレンダー更新: ${res.calendarUpdated}件 / Todo 新規: ${res.tasksCreated}件 / Todo 更新: ${res.tasksUpdated}件 / スキップ: ${res.skipped}件` +
-          (res.errors.length ? `\nエラー: ${res.errors.join(', ')}` : '') +
-          (res.warnings.length ? `\n警告: ${res.warnings.join(', ')}` : ''),
-      );
+      setRegisterResult(res);
     } catch (e) {
-      setResult(toErrorMessage(e));
+      setRegisterError(toErrorMessage(e));
     } finally {
       setRegistering(false);
     }
@@ -166,7 +165,8 @@ export function PreviewPage() {
         {registering ? '登録中…' : 'Google に登録'}
       </button>
 
-      {result && <pre className="result">{result}</pre>}
+      {registerResult && <RegisterResultPanel result={registerResult} />}
+      {registerError && <p className="error register-error">{registerError}</p>}
 
       <Link to="/" className="link-back">
         ← 戻る
