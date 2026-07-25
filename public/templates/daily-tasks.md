@@ -28,6 +28,7 @@ tasks:
       - name: 天気・洗剤残量チェック
       - name: 洗濯開始
       - name: (朝-干物取り込み)
+      - name: 体重測定
       - name: 朝食
         detail: ブラン40g(カップ~150ml), 味噌汁, 卵, 水多め
       - name: 簡易食器洗い
@@ -83,7 +84,6 @@ tasks:
       - name: 爪
       - name: 翌日スケジューリング
       - name: 入眠準備
-      - name: グルーミング
 
   - name: 就寝
     category: DailyTask
