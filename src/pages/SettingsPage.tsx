@@ -1,12 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TemplateEditor } from '../components/TemplateEditor';
 import { useAuth } from '../hooks/useAuth';
 import { loadDefaultTemplates, loadTemplates } from '../services/templateLoader';
+import {
+  GEMINI_MODEL_CATALOG,
+  getGeminiModelOption,
+} from '../../shared/geminiModels.ts';
 import {
   clearStoredTemplates,
   hasStoredTemplates,
   saveStoredTemplates,
 } from '../storage/templateStorage';
+import {
+  loadStoredGeminiModel,
+  saveGeminiModel,
+} from '../storage/geminiModelStorage';
 import { toErrorMessage } from '../utils/errors';
 import type { DailyTaskTemplate } from '../types';
 
@@ -16,6 +24,15 @@ export function SettingsPage() {
   const [usingCustom, setUsingCustom] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editorKey, setEditorKey] = useState(0);
+  const [selectedModel, setSelectedModel] = useState(() => loadStoredGeminiModel());
+  const [freeTierOnly, setFreeTierOnly] = useState(false);
+
+  const visibleModels = useMemo(
+    () => (freeTierOnly ? GEMINI_MODEL_CATALOG.filter((model) => model.freeTier) : GEMINI_MODEL_CATALOG),
+    [freeTierOnly],
+  );
+
+  const selectedModelOption = getGeminiModelOption(selectedModel);
 
   const loadEditorTemplates = useCallback(async () => {
     const [loaded, custom] = await Promise.all([
@@ -30,6 +47,19 @@ export function SettingsPage() {
   useEffect(() => {
     loadEditorTemplates().catch((e) => setError(toErrorMessage(e)));
   }, [loadEditorTemplates]);
+
+  useEffect(() => {
+    if (!visibleModels.some((model) => model.id === selectedModel)) {
+      const fallback = visibleModels[0]?.id ?? loadStoredGeminiModel();
+      setSelectedModel(fallback);
+      saveGeminiModel(fallback);
+    }
+  }, [selectedModel, visibleModels]);
+
+  const handleModelChange = (modelId: string) => {
+    setSelectedModel(modelId);
+    saveGeminiModel(modelId);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -83,6 +113,52 @@ export function SettingsPage() {
           <button type="button" className="btn btn-primary" onClick={() => login()}>
             Google アカウント連携
           </button>
+        )}
+      </section>
+
+      <section>
+        <h2>LLM モデル</h2>
+        <p className="gemini-model-intro">
+          スケジュール生成に使う Gemini モデルです。無料枠の有無は参考情報です。
+          {' '}
+          <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noreferrer">
+            公式 Pricing
+          </a>
+          {' / '}
+          <a href="https://aistudio.google.com/rate-limit" target="_blank" rel="noreferrer">
+            Rate limits
+          </a>
+          {' '}で最新を確認してください。
+        </p>
+        <label className="gemini-model-filter">
+          <input
+            type="checkbox"
+            checked={freeTierOnly}
+            onChange={(event) => setFreeTierOnly(event.target.checked)}
+          />
+          無料枠のみ表示
+        </label>
+        <div className="gemini-model-field">
+          <label htmlFor="gemini-model-select">利用モデル</label>
+          <select
+            id="gemini-model-select"
+            className="gemini-model-select"
+            value={selectedModel}
+            onChange={(event) => handleModelChange(event.target.value)}
+          >
+            {visibleModels.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.label}
+                {model.freeTier ? '（無料枠）' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        {selectedModelOption?.description && (
+          <p className="gemini-model-description">{selectedModelOption.description}</p>
+        )}
+        {selectedModelOption?.freeTier && (
+          <p className="gemini-model-badge">無料枠あり（参考）</p>
         )}
       </section>
 

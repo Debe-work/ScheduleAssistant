@@ -1,4 +1,5 @@
 import type { DailyTaskTemplate, GeneratedSchedule, ScheduleItem } from '../types';
+import { loadStoredGeminiModel } from '../storage/geminiModelStorage';
 import { readWorkerError, workerFetch } from './workerClient';
 
 type GenerateScheduleRequest = {
@@ -8,6 +9,7 @@ type GenerateScheduleRequest = {
   tasks: ScheduleItem[];
   templates: DailyTaskTemplate[];
   timeZone: string;
+  model: string;
 };
 
 export async function generateSchedule(params: {
@@ -20,6 +22,7 @@ export async function generateSchedule(params: {
   const body: GenerateScheduleRequest = {
     ...params,
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    model: loadStoredGeminiModel(),
   };
 
   const res = await workerFetch('/api/gemini/schedule', {

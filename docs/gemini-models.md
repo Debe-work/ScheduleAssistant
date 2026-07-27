@@ -11,16 +11,32 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 
 | 項目 | 値 |
 |---|---|
-| 利用モデル | `gemini-3.5-flash-lite` |
+| デフォルトモデル | `gemini-3.5-flash-lite` |
+| ユーザー選択 | 設定画面で変更可能（localStorage `gemini-model:v1`） |
 | 呼び出し経路 | フロント → Worker `POST /api/gemini/schedule` → Gemini API |
-| 定義場所 | `worker/src/index.ts` の `GEMINI_GENERATE_URL` |
+| catalog 定義 | [`shared/geminiModels.ts`](../shared/geminiModels.ts) |
 | API キー | Worker secret `GEMINI_API_KEY`（フロントには公開しない） |
 
 ```ts
-// worker/src/index.ts
-const GEMINI_GENERATE_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
+// shared/geminiModels.ts
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 ```
+
+---
+
+## モデル一覧の更新手順
+
+1. 公式 [Models](https://ai.google.dev/gemini-api/docs/models) / [Pricing](https://ai.google.dev/gemini-api/docs/pricing) を確認
+2. [`shared/geminiModels.ts`](../shared/geminiModels.ts) の `GEMINI_MODEL_CATALOG` を更新
+3. 本ファイル（調査メモ）のテーブル・更新履歴を同期
+4. `yarn test && yarn worker:typecheck && yarn lint` を実行
+5. Agent チャットで `/update-gemini-models` を実行（定義: [`.cursor/commands/update-gemini-models.md`](../.cursor/commands/update-gemini-models.md)）
+
+---
+
+## 旧: Worker 直書き（廃止）
+
+以前は `worker/src/index.ts` の `GEMINI_GENERATE_URL` にモデル名を直書きしていました。現在はリクエストごとに catalog から解決します。
 
 ---
 
@@ -127,17 +143,12 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 ## モデル変更手順
 
-1. `worker/src/index.ts` の `GEMINI_GENERATE_URL` のモデル名を変更
-
-```ts
-// 例: Gemini 3.5 Flash に変更
-const GEMINI_GENERATE_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
-```
-
+1. [`shared/geminiModels.ts`](../shared/geminiModels.ts) の `GEMINI_MODEL_CATALOG` を更新（または設定画面でユーザーが選択）
 2. Worker を再起動（`yarn worker:dev`）
 3. スケジュール生成を実行し、JSON 形式・品質・429 の有無を確認
 4. 本番デプロイ前に `yarn worker:typecheck` / `yarn test` を実行
+
+catalog 自体を最新化する場合は Agent チャットで `/update-gemini-models` を実行（[`.cursor/commands/update-gemini-models.md`](../.cursor/commands/update-gemini-models.md)）。
 
 ---
 
@@ -160,3 +171,4 @@ const GEMINI_GENERATE_URL =
 |---|---|
 | 2026-07-26 | 初版作成。現行 `gemini-2.5-flash` と無料枠モデル一覧を整理 |
 | 2026-07-26 | 利用モデルを `gemini-3.5-flash-lite` に変更 |
+| 2026-07-27 | 設定画面でのモデル選択対応。catalog を `shared/geminiModels.ts` に移行 |

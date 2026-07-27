@@ -1,7 +1,9 @@
+import { resolveGeminiModel } from '../../shared/geminiModels.ts';
+
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
-const GEMINI_GENERATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
+const GEMINI_GENERATE_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/tasks',
@@ -68,6 +70,7 @@ type GenerateScheduleRequest = {
   tasks: ScheduleItem[];
   templates: DailyTaskTemplate[];
   timeZone: string;
+  model?: string;
 };
 
 type AuthTransaction = {
@@ -343,7 +346,7 @@ function validateGenerateScheduleRequest(value: unknown): GenerateScheduleReques
     throw new HttpError(400, '生成リクエストの形式が不正です');
   }
 
-  const { date, invokedAt, calendarEvents, tasks, templates, timeZone } = value;
+  const { date, invokedAt, calendarEvents, tasks, templates, timeZone, model } = value;
   if (
     typeof date !== 'string'
     || typeof invokedAt !== 'string'
@@ -351,6 +354,7 @@ function validateGenerateScheduleRequest(value: unknown): GenerateScheduleReques
     || !Array.isArray(calendarEvents)
     || !Array.isArray(tasks)
     || !Array.isArray(templates)
+    || (model !== undefined && typeof model !== 'string')
   ) {
     throw new HttpError(400, '生成リクエストの形式が不正です');
   }
@@ -362,6 +366,7 @@ function validateGenerateScheduleRequest(value: unknown): GenerateScheduleReques
     tasks: tasks.map(validateScheduleItem),
     templates: templates.map(validateDailyTaskTemplate),
     timeZone,
+    model,
   };
 }
 
@@ -439,9 +444,10 @@ async function generateSchedule(env: Env, params: GenerateScheduleRequest): Prom
     throw new HttpError(500, 'Gemini API Key が設定されていません');
   }
 
+  const modelId = resolveGeminiModel(params.model);
   let lastError: HttpError | null = null;
   for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt++) {
-    const result = await callGemini(env, buildSchedulePrompt(params));
+    const result = await callGemini(env, buildSchedulePrompt(params), modelId);
     if (result.ok) {
       return parseGeneratedSchedule(result.text);
     }
@@ -497,8 +503,9 @@ function formatGeminiError(error: GeminiErrorResponse['error'], status: number):
 async function callGemini(
   env: Env,
   prompt: string,
+  modelId: string,
 ): Promise<{ ok: true; text: string } | { ok: false; error: GeminiCallError }> {
-  const url = new URL(GEMINI_GENERATE_URL);
+  const url = new URL(`${GEMINI_GENERATE_BASE_URL}/${modelId}:generateContent`);
   url.searchParams.set('key', env.GEMINI_API_KEY);
 
   const response = await fetch(url.toString(), {

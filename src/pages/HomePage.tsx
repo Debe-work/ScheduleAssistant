@@ -10,6 +10,8 @@ import { loadTemplates } from '../services/templateLoader';
 import { generateSchedule } from '../services/geminiAgent';
 import { mergeTaskSchedulesIntoDraft } from '../services/taskScheduleMerge';
 import { saveScheduleDraft } from '../storage/scheduleDraft';
+import { loadStoredGeminiModel } from '../storage/geminiModelStorage';
+import { getGeminiModelLabel } from '../../shared/geminiModels.ts';
 import type { GeneratedSchedule } from '../types';
 
 export function HomePage() {
@@ -18,6 +20,7 @@ export function HomePage() {
   const [date, setDate] = useState(todayString());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modelLabel = getGeminiModelLabel(loadStoredGeminiModel());
 
   const handleGenerate = async () => {
     setError(null);
@@ -62,14 +65,17 @@ export function HomePage() {
       )}
 
       {authed && (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
-          onClick={handleGenerate}
-          disabled={loading}
-        >
-          {loading ? '生成中…' : 'スケジュール生成'}
-        </button>
+        <>
+          <p className="home-model-note">利用モデル: {modelLabel}</p>
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            onClick={handleGenerate}
+            disabled={loading}
+          >
+            {loading ? '生成中…' : 'スケジュール生成'}
+          </button>
+        </>
       )}
 
       {error && <p className="error">{error}</p>}

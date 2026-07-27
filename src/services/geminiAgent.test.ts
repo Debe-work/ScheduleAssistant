@@ -1,8 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GeneratedSchedule } from '../types';
+import { DEFAULT_GEMINI_MODEL } from '../../shared/geminiModels.ts';
+import { clearStoredGeminiModel, saveGeminiModel } from '../storage/geminiModelStorage';
 import { generateSchedule } from './geminiAgent';
 
 const fetchMock = vi.fn();
+
+function createLocalStorageMock() {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+  };
+}
 
 const baseParams = {
   date: '2026-07-06',
@@ -17,6 +35,11 @@ describe('generateSchedule', () => {
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
     vi.stubEnv('VITE_WORKER_BASE_URL', 'https://worker.example/');
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: createLocalStorageMock(),
+      configurable: true,
+    });
+    clearStoredGeminiModel();
   });
 
   afterEach(() => {
@@ -52,7 +75,22 @@ describe('generateSchedule', () => {
     expect(JSON.parse(init.body as string)).toMatchObject({
       ...baseParams,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      model: DEFAULT_GEMINI_MODEL,
     });
+  });
+
+  it('includes the stored model in the request body', async () => {
+    saveGeminiModel('gemini-2.5-flash');
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({
+      date: '2026-07-06',
+      summary: '生成しました',
+      items: [],
+    }), { status: 200 }));
+
+    await generateSchedule(baseParams);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).model).toBe('gemini-2.5-flash');
   });
 
   it('throws Worker error messages from JSON error responses', async () => {
