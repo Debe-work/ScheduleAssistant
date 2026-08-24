@@ -6,7 +6,7 @@
 - name // task名
 - category // GoogleTodoに登録する場合のカテゴリ名
 - detail // タスク詳細内容 (そのままタスク詳細として登録する)
-- startTime  // 開始時間の目安。他の予定・タスクがない場合にこの時刻に配置する。当日に既存の予定やタスクがある場合は AI が空き時間に合わせてずらす (ex: アプリ起動時, 12:00, タスクhogeのxx分後)
+- startTime  // 開始時間の目安。他の予定・タスクがない場合にこの時刻に配置する。当日に既存の予定やタスクがある場合は AI が空き時間に合わせてずらす (ex: アプリ起動時, 12:00, タスクhogeのxx分後)。アプリ起動時は呼び出し時刻そのものを使い、UTCとローカル時刻を取り違えない。
 - endTime // 終了時間目安 (ex: 開始時間のxx分後)
 - defaultComplete // trueの場合は登録時点でステータスを完了にしておく
 - children // 子タスク。内容は親タスクにcategory, childrenが含まれないものを配列化した形
@@ -20,7 +20,7 @@ condition: 呼び出し当日のタスク登録時
 name: 起床 
 category: DailyTask
 detail: 身支度、水分補給
-startTime: アプリを呼び出した時刻。
+startTime: アプリを呼び出した瞬間（登録日のローカル時刻。UTCに変換しない）。
 defaultComplete: true
 
 ## 朝の運動

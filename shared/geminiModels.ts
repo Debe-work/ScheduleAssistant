@@ -58,24 +58,6 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
     freeTier: true,
   },
   {
-    id: 'gemini-2.0-flash',
-    label: 'Gemini 2.0 Flash',
-    description: '旧世代 Flash',
-    freeTier: true,
-  },
-  {
-    id: 'gemini-2.0-flash-lite',
-    label: 'Gemini 2.0 Flash-Lite',
-    description: '旧世代・最安寄り',
-    freeTier: true,
-  },
-  {
-    id: 'gemma-4',
-    label: 'Gemma 4',
-    description: 'オープンモデル系（Free only）',
-    freeTier: true,
-  },
-  {
     id: 'gemini-3.1-pro-preview',
     label: 'Gemini 3.1 Pro Preview',
     description: '高推論。API 無料枠なし',

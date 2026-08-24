@@ -3,7 +3,7 @@
 Schedule Assistant で利用する Gemini モデルの調査メモ。  
 公式情報は変わることがあるため、最終判断は [公式 Pricing](https://ai.google.dev/gemini-api/docs/pricing) と [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) を正とする。
 
-**調査日**: 2026-07-26
+**調査日**: 2026-08-25
 
 ---
 
@@ -13,7 +13,7 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 |---|---|
 | デフォルトモデル | `gemini-3.5-flash-lite` |
 | ユーザー選択 | 設定画面で変更可能（localStorage `gemini-model:v1`） |
-| 呼び出し経路 | フロント → Worker `POST /api/gemini/schedule` → Gemini API |
+| 呼び出し経路 | フロント → Worker `POST /api/gemini/schedule` → Gemini Interactions API |
 | catalog 定義 | [`shared/geminiModels.ts`](../shared/geminiModels.ts) |
 | API キー | Worker secret `GEMINI_API_KEY`（フロントには公開しない） |
 
@@ -34,9 +34,16 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 ---
 
-## 旧: Worker 直書き（廃止）
+## 呼び出し方式
 
-以前は `worker/src/index.ts` の `GEMINI_GENERATE_URL` にモデル名を直書きしていました。現在はリクエストごとに catalog から解決します。
+Worker は `POST /v1beta/interactions` を使い、モデル名はリクエストごとに catalog から解決します。
+
+- 入力: `input` にスケジュール生成プロンプトを渡す
+- 構造化出力: `response_format` でスケジュールJSONのSchemaを指定
+- 保存: `store: false` を指定し、Calendar／Todo情報をInteraction履歴に保存しない
+- 応答: `steps` の `model_output` からテキストを取り出し、Worker側でもJSONと業務ルールを検証
+
+Interactions API は将来のマルチターン会話、ツール呼び出し、バックグラウンド実行へ拡張しやすい一方、現在のスケジュール生成は一回完結の同期処理なので、`previous_interaction_id` と `background` は使用しません。
 
 ---
 
@@ -57,9 +64,6 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 | **Gemini 2.5 Pro** | あり | $1.25 / $10.00（≤200k tokens） | 推論強め。無料枠の RPD は厳しめ |
 | **Gemini 2.5 Flash** | あり | $0.30 / $2.50 | **現行利用中**。バランス型 |
 | **Gemini 2.5 Flash-Lite** | あり | $0.10 / $0.40 前後 | 最安クラス |
-| **Gemini 2.0 Flash** | あり | $0.10 / … | 旧世代 |
-| **Gemini 2.0 Flash-Lite** | あり | $0.075 / … | 旧世代・最安寄り |
-| **Gemma 4** | あり | 有料枠なし（Free only） | オープンモデル系 |
 
 ### その他（無料枠あり・本アプリ用途外）
 
@@ -161,6 +165,8 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | モデル一覧 | https://ai.google.dev/gemini-api/docs/models |
 | API キー発行（AI Studio） | https://aistudio.google.com/ |
 | 自分のクォータ確認 | https://aistudio.google.com/rate-limit |
+| Interactions API 概要 | https://ai.google.dev/gemini-api/docs/interactions-overview |
+| Interactions API Structured Output | https://ai.google.dev/gemini-api/docs/interactions/structured-output |
 | Quickstart | https://ai.google.dev/gemini-api/docs/quickstart |
 
 ---
@@ -172,3 +178,4 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | 2026-07-26 | 初版作成。現行 `gemini-2.5-flash` と無料枠モデル一覧を整理 |
 | 2026-07-26 | 利用モデルを `gemini-3.5-flash-lite` に変更 |
 | 2026-07-27 | 設定画面でのモデル選択対応。catalog を `shared/geminiModels.ts` に移行 |
+| 2026-08-25 | Interactions APIへ移行。JSON Schema出力と`store: false`を採用 |

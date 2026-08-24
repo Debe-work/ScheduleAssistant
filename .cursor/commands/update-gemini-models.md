@@ -14,7 +14,7 @@ Schedule Assistant の Gemini モデル一覧を最新化してください。
 
 1. `shared/geminiModels.ts`
    - `GEMINI_MODEL_CATALOG` を更新
-   - テキスト生成（`generateContent`）向けモデルのみ含める
+   - スケジュール生成で利用可能な Interactions API 向けモデルのみ含める
    - image / tts / live / embed / veo / imagen / robotics / translate 等は除外
    - Pricing で Input = Free of charge のモデルに `freeTier: true`、それ以外は `freeTier: false`
    - `DEFAULT_GEMINI_MODEL` は変更しない（変更が必要な場合のみ理由を明記）

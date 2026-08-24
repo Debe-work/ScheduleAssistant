@@ -16,6 +16,7 @@ describe('geminiModels', () => {
   it('defaults unknown models to gemini-3.5-flash-lite', () => {
     expect(resolveGeminiModel(undefined)).toBe(DEFAULT_GEMINI_MODEL);
     expect(resolveGeminiModel('unknown-model')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('gemini-2.0-flash')).toBe(DEFAULT_GEMINI_MODEL);
   });
 
   it('accepts catalog models', () => {

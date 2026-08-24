@@ -2,7 +2,7 @@
 
 毎朝のデイリータスク割り振りを支援する個人用 PWA。
 
-フロントエンドは GitHub Pages に配信し、Google OAuth の code exchange / refresh / session 管理と Gemini API 呼び出しを Cloudflare Workers に切り出す構成です。
+フロントエンドは GitHub Pages に配信し、Google OAuth の code exchange / refresh / session 管理と Gemini Interactions API 呼び出しを Cloudflare Workers に切り出す構成です。
 
 ## セットアップ
 
@@ -80,7 +80,7 @@ yarn worker:dev
 
 ## Gemini API
 
-Gemini API Key は Worker secret の `GEMINI_API_KEY` として保持します。フロントエンドのビルド成果物には含めません。
+Gemini API Key は Worker secret の `GEMINI_API_KEY` として保持します。フロントエンドのビルド成果物には含めません。スケジュール生成は Interactions API の構造化出力を使い、予定・Todo情報を保存しないため `store: false` を指定しています。
 
 Google AI Studio で API Key を作成し、Cloudflare Worker へ設定してください。
 

@@ -3,7 +3,7 @@ import { resolveGeminiModel } from '../../shared/geminiModels.ts';
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
-const GEMINI_GENERATE_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/tasks',
@@ -107,9 +107,19 @@ type OAuthTokenResponse = {
 };
 
 type GeminiResponse = {
-  candidates?: {
+  status?: string;
+  error?: {
+    message?: string;
+    status?: string;
+  };
+  steps?: {
+    type?: string;
     content?: {
-      parts?: { text?: string }[];
+      type?: string;
+      text?: string;
+    }[];
+    error?: {
+      message?: string;
     };
   }[];
 };
@@ -439,6 +449,49 @@ type GeminiCallError = {
 
 const MAX_GEMINI_ATTEMPTS = 2;
 
+const GEMINI_SCHEDULE_RESPONSE_FORMAT = {
+  type: 'text',
+  mime_type: 'application/json',
+  schema: {
+    type: 'object',
+    properties: {
+      date: { type: 'string', format: 'date' },
+      items: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            detail: { type: 'string' },
+            startTime: { type: 'string', format: 'date-time' },
+            endTime: { type: 'string', format: 'date-time' },
+            source: { type: 'string', enum: ['daily'] },
+            category: { type: 'string' },
+            parentName: { type: 'string' },
+            status: { type: 'string', enum: ['needsAction', 'completed'] },
+            defaultComplete: { type: 'boolean' },
+          },
+          required: ['title', 'source'],
+        },
+      },
+      summary: { type: 'string' },
+      taskSchedules: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            startTime: { type: 'string', format: 'date-time' },
+            endTime: { type: 'string', format: 'date-time' },
+          },
+          required: ['title'],
+        },
+      },
+    },
+    required: ['date', 'items', 'summary'],
+  },
+} as const;
+
 async function generateSchedule(env: Env, params: GenerateScheduleRequest): Promise<GeneratedSchedule> {
   if (!env.GEMINI_API_KEY) {
     throw new HttpError(500, 'Gemini API Key が設定されていません');
@@ -449,7 +502,7 @@ async function generateSchedule(env: Env, params: GenerateScheduleRequest): Prom
   for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt++) {
     const result = await callGemini(env, buildSchedulePrompt(params), modelId);
     if (result.ok) {
-      return parseGeneratedSchedule(result.text);
+      return applyInvocationTimeRule(parseGeneratedSchedule(result.text), params);
     }
 
     lastError = new HttpError(result.error.status, result.error.message);
@@ -458,6 +511,97 @@ async function generateSchedule(env: Env, params: GenerateScheduleRequest): Prom
   }
 
   throw lastError ?? new HttpError(500, 'スケジュール生成に失敗しました');
+}
+
+type InvocationContext = {
+  localDate: string;
+  localDateTime: string;
+};
+
+function getInvocationContext(invokedAt: string, timeZone: string): InvocationContext {
+  const instant = new Date(invokedAt);
+  if (Number.isNaN(instant.getTime())) {
+    throw new HttpError(400, 'アプリ起動時刻の形式が不正です');
+  }
+
+  let parts: Record<string, string>;
+  try {
+    parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+      })
+        .formatToParts(instant)
+        .filter(({ type }) => type !== 'literal')
+        .map(({ type, value }) => [type, value]),
+    );
+  } catch {
+    throw new HttpError(400, 'タイムゾーンの形式が不正です');
+  }
+
+  const localDate = `${parts.year}-${parts.month}-${parts.day}`;
+  return {
+    localDate,
+    localDateTime: `${localDate}T${parts.hour}:${parts.minute}:${parts.second}`,
+  };
+}
+
+function isInvocationTimeTemplate(template: DailyTaskTemplate): boolean {
+  return Boolean(
+    template.startTime
+      && /(?:アプリ|アプリケーション).*(?:呼び出|起動)/.test(template.startTime),
+  );
+}
+
+/**
+ * An invocation-time task is a timestamp marker, not an AI-scheduled activity.
+ * Keep it tied to the request instant even when the model misreads UTC as local time.
+ */
+export function applyInvocationTimeRule(
+  schedule: GeneratedSchedule,
+  params: Pick<GenerateScheduleRequest, 'date' | 'invokedAt' | 'templates' | 'timeZone'>,
+): GeneratedSchedule {
+  const invocationTemplates = params.templates.filter(isInvocationTimeTemplate);
+  if (invocationTemplates.length === 0) return schedule;
+
+  const invocation = getInvocationContext(params.invokedAt, params.timeZone);
+  const invocationNames = new Set(invocationTemplates.map((template) => template.name));
+  const itemsWithoutInvocationTasks = schedule.items.filter((item) => !invocationNames.has(item.title));
+
+  if (invocation.localDate !== params.date) {
+    return {
+      ...schedule,
+      items: itemsWithoutInvocationTasks,
+    };
+  }
+
+  const items = [...itemsWithoutInvocationTasks];
+  for (const template of invocationTemplates) {
+    const defaultComplete = template.defaultComplete ?? false;
+    const generatedItem = schedule.items.find((item) => item.title === template.name);
+    items.push({
+      ...generatedItem,
+      title: template.name,
+      detail: generatedItem?.detail ?? template.detail,
+      source: 'daily',
+      category: generatedItem?.category ?? template.category,
+      startTime: params.invokedAt,
+      endTime: undefined,
+      status: defaultComplete ? 'completed' : 'needsAction',
+      defaultComplete,
+    });
+  }
+
+  return {
+    ...schedule,
+    items,
+  };
 }
 
 async function readGeminiError(response: Response): Promise<GeminiErrorResponse['error']> {
@@ -500,22 +644,22 @@ function formatGeminiError(error: GeminiErrorResponse['error'], status: number):
   };
 }
 
-async function callGemini(
-  env: Env,
+export async function callGemini(
+  env: Pick<Env, 'GEMINI_API_KEY'>,
   prompt: string,
   modelId: string,
 ): Promise<{ ok: true; text: string } | { ok: false; error: GeminiCallError }> {
-  const url = new URL(`${GEMINI_GENERATE_BASE_URL}/${modelId}:generateContent`);
-  url.searchParams.set('key', env.GEMINI_API_KEY);
-
-  const response = await fetch(url.toString(), {
+  const response = await fetch(GEMINI_INTERACTIONS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': env.GEMINI_API_KEY,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-      },
+      model: modelId,
+      input: prompt,
+      store: false,
+      response_format: GEMINI_SCHEDULE_RESPONSE_FORMAT,
     }),
   });
 
@@ -525,8 +669,23 @@ async function callGemini(
   }
 
   const data = await response.json<GeminiResponse>();
-  const text = data.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? '')
+  const stepError = data.steps?.find((step) => step.error?.message)?.error?.message;
+  if (data.status === 'failed' || stepError) {
+    return {
+      ok: false,
+      error: {
+        status: 502,
+        message: data.error?.message ?? stepError ?? 'Gemini Interaction が失敗しました',
+        retryable: false,
+      },
+    };
+  }
+
+  const text = data.steps
+    ?.filter((step) => step.type === 'model_output')
+    .flatMap((step) => step.content ?? [])
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text ?? '')
     .join('')
     .trim();
   if (!text) {
@@ -545,6 +704,7 @@ async function callGemini(
 function buildSchedulePrompt(params: GenerateScheduleRequest): string {
   const { date, invokedAt, calendarEvents, tasks, templates, timeZone } = params;
   const timedCalendarEvents = calendarEvents.filter((event) => !event.isAllDay);
+  const invocation = getInvocationContext(invokedAt, timeZone);
 
   return `あなたは個人のデイリースケジュール調整アシスタントです。
 登録日 ${date} のデイリータスクを、既存予定とテンプレートに基づいてスケジュールしてください。
@@ -552,19 +712,22 @@ function buildSchedulePrompt(params: GenerateScheduleRequest): string {
 ## 重要ルール
 
 1. テンプレートの \`condition\` を登録日・曜日で評価し、該当するタスクのみ登録する
-2. \`startTime\` は **他の予定・タスクがない場合のデフォルト配置時刻（目安）** である
-3. 当日に既存の Calendar 予定（**終日予定を除く**）や Todo がある場合、衝突を避け **空き時間にずらして** 配置する
-4. **終日（isAllDay）の Calendar 予定は時刻調整の対象外** とし、存在を無視して空き時間の計算に含めない
-5. \`endTime\` が相対指定（例: 開始から40分後）の場合、開始がずれても相対関係を維持する
-6. 曜日分岐（例: 月曜は6:30, それ以外は7:30）は登録日からデフォルト時刻を決定してから、ずらしルールを適用
-7. 親タスクの \`children\` は親の時間枠内で順序どおりに配置する
-8. \`defaultComplete: true\` のタスクは status を completed にする
-9. ずらした場合は summary に理由を記載する
-10. 時刻は ISO 8601 形式（タイムゾーン: ${timeZone}）で返す
+2. テンプレートの \`startTime\` が「アプリを呼び出した時刻」などの実行時刻を示す場合、登録日がアプリ起動日のときだけタスクを作成し、アプリ起動時刻そのものを使う。これは既存予定との衝突回避でも変更しない
+3. 上記以外の \`startTime\` は **他の予定・タスクがない場合のデフォルト配置時刻（目安）** である
+4. 当日に既存の Calendar 予定（**終日予定を除く**）や Todo がある場合、衝突を避け **空き時間にずらして** 配置する
+5. **終日（isAllDay）の Calendar 予定は時刻調整の対象外** とし、存在を無視して空き時間の計算に含めない
+6. \`endTime\` が相対指定（例: 開始から40分後）の場合、開始がずれても相対関係を維持する
+7. 曜日分岐（例: 月曜は6:30, それ以外は7:30）は登録日からデフォルト時刻を決定してから、ずらしルールを適用
+8. 親タスクの \`children\` は親の時間枠内で順序どおりに配置する
+9. \`defaultComplete: true\` のタスクは status を completed にする
+10. ずらした場合は summary に理由を記載する
+11. 時刻は ISO 8601 形式（タイムゾーン: ${timeZone}）で返す
 
 ## コンテキスト
 
-- アプリ起動時刻: ${invokedAt}
+- アプリ起動時刻（UTCの絶対時刻）: ${invokedAt}
+- アプリ起動時刻（${timeZone} のローカル日時）: ${invocation.localDateTime}
+- アプリ起動日のローカル日付: ${invocation.localDate}
 - 登録日: ${date}
 
 ## 既存 Calendar 予定（時刻調整の対象・終日予定は除外済み）

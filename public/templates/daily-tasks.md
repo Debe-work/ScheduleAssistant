@@ -10,7 +10,7 @@ tasks:
     condition: 呼び出し当日のタスク登録時
     category: DailyTask
     detail: 洗顔、飲水、水筒用意
-    startTime: アプリを呼び出した時刻
+    startTime: アプリを呼び出した瞬間（登録日のローカル時刻。UTCに変換せず、既存予定との衝突回避でも変更しない）
     defaultComplete: true
 
   - name: 朝ジム
@@ -71,7 +71,6 @@ tasks:
 
   - name: PM-HK
     category: DailyTask
-    detail: nosh
     startTime: 月曜日は22:00, それ以外は23:00
     endTime: 月曜日は開始から1時間40分後、それ以外は40分後
     children:
@@ -89,4 +88,5 @@ tasks:
   - name: 就寝
     category: DailyTask
     startTime: "24:00"
+    defaultComplete: true
 ```

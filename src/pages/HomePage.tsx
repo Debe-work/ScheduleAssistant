@@ -25,6 +25,7 @@ export function HomePage() {
   const handleGenerate = async () => {
     setError(null);
     setLoading(true);
+    const invokedAt = new Date().toISOString();
     try {
       const [calendarEvents, tasks, templates] = await Promise.all([
         fetchCalendarEvents(date),
@@ -34,7 +35,7 @@ export function HomePage() {
 
       const schedule: GeneratedSchedule = await generateSchedule({
         date,
-        invokedAt: new Date().toISOString(),
+        invokedAt,
         calendarEvents,
         tasks,
         templates,
