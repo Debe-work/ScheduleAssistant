@@ -18,13 +18,13 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
     id: 'gemini-3.5-flash',
     label: 'Gemini 3.5 Flash',
-    description: '品質と速度のバランス',
+    description: '最新の高性能 Flash。品質と速度のバランス',
     freeTier: true,
   },
   {
     id: 'gemini-3.5-flash-lite',
     label: 'Gemini 3.5 Flash-Lite',
-    description: '安・高速。デフォルト',
+    description: 'GA の低コスト・高速モデル。デフォルト',
     freeTier: true,
   },
   {
@@ -32,6 +32,12 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
     label: 'Gemini 3.1 Flash-Lite',
     description: '軽量・低コスト',
     freeTier: true,
+  },
+  {
+    id: 'gemini-3.1-pro-preview',
+    label: 'Gemini 3.1 Pro Preview',
+    description: '高推論。API 無料枠なし',
+    freeTier: false,
   },
   {
     id: 'gemini-3-flash-preview',
@@ -56,12 +62,6 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
     label: 'Gemini 2.5 Flash-Lite',
     description: '最安クラス',
     freeTier: true,
-  },
-  {
-    id: 'gemini-3.1-pro-preview',
-    label: 'Gemini 3.1 Pro Preview',
-    description: '高推論。API 無料枠なし',
-    freeTier: false,
   },
 ];
 

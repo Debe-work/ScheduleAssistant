@@ -57,7 +57,7 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 | モデル | 無料枠 | 有料時の目安（入力 / 出力 per 1M tokens） | 備考 |
 |---|---|---|---|
 | **Gemini 3.6 Flash** | あり | $1.50 / $7.50 | 最新 Flash 系 |
-| **Gemini 3.5 Flash** | あり | $1.50 / $9.00 | |
+| **Gemini 3.5 Flash** | あり | $1.50 / $9.00 | GA。高性能 Flash |
 | **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | 安・高速寄り |
 | **Gemini 3.1 Flash-Lite** | あり | $0.25 / $1.50 | |
 | **Gemini 3 Flash Preview** | あり | $0.50 / $3.00 前後 | Preview |
@@ -83,7 +83,7 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | モデル | 備考 |
 |---|---|
-| Gemini 3.1 Pro Preview | 高推論。API 無料枠なし |
+| `gemini-3.1-pro-preview` | 高推論。API 無料枠なし |
 | Gemini Omni Flash Preview | |
 | Gemini 3.1 Flash Image (Nano Banana 2) | 画像生成 |
 | Gemini 3 Pro Image (Nano Banana Pro) | 画像生成 |
@@ -103,15 +103,12 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 | 自分のプロジェクトの実効クォータ | https://aistudio.google.com/rate-limit |
 | 公式 Rate limits ドキュメント | https://ai.google.dev/gemini-api/docs/rate-limits |
 
-### 無料枠の目安（2026年7月時点の第三者・公式スナップショット）
+### レート制限の確認方法
 
-| モデル | RPM | RPD | TPM |
-|---|---|---|---|
-| Gemini 2.5 / 3 Flash 系 | 10〜15 | 250〜1,500 | 250,000〜1,000,000 |
-| Gemini 2.5 / 3.1 Flash-Lite 系 | 15〜30 | 1,000〜1,500 | 250,000〜1,000,000 |
-| Gemini 2.5 Pro | 5 | 50〜100 | 250,000 |
-
-※ 上記は参考値。必ず AI Studio の Rate limits 画面で確認すること。
+モデル別の RPM・TPM・RPD は、プロジェクトの利用 tier と時点によって変動します。
+公式ドキュメントは固定値を保証していないため、数値を catalog や本書に埋め込まず、
+実効値は AI Studio の Rate limits 画面で確認してください。無料 tier では
+入力・出力 token が無料でも、RPM・TPM・RPD の制限は適用されます。
 
 ---
 
@@ -131,16 +128,17 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | 方針 | 候補 | 向いているケース |
 |---|---|---|
-| **品質優先** | `gemini-3.5-flash`, `gemini-3.6-flash` | 複雑な制約・推論を増やしたい |
+| **品質優先** | `gemini-3.6-flash`, `gemini-3.5-flash` | 複雑な制約・推論を増やしたい |
 | **現状維持** | `gemini-2.5-flash` | 実績あり・バランス型 |
 | **枠・コスト優先** | `gemini-2.5-flash-lite`, `gemini-3.1-flash-lite` | 個人利用・1日の生成回数を増やしたい |
-| **最高品質（有料覚悟）** | `gemini-2.5-pro`, `gemini-3.1-pro-preview` | 無料枠外。品質最優先 |
+| **推論・品質優先** | `gemini-2.5-pro` | 無料枠あり。複雑な制約・推論向け |
+| **最高品質（有料覚悟）** | `gemini-3.1-pro-preview` | 無料枠なし。品質最優先 |
 
 ### おすすめの検討順
 
-1. まず `gemini-2.5-flash` のまま品質・429 エラーを確認
+1. まず `gemini-3.5-flash-lite`（デフォルト）で品質・429 エラーを確認
 2. 品質不足なら `gemini-3.5-flash` または `gemini-3.6-flash` を試す
-3. RPD / RPM に当たるなら `*-flash-lite` に下げる
+3. RPD / RPM に当たるなら `gemini-3.1-flash-lite` に下げる
 4. それでも不足なら有料 tier または Pro 系
 
 ---
@@ -179,3 +177,4 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | 2026-07-26 | 利用モデルを `gemini-3.5-flash-lite` に変更 |
 | 2026-07-27 | 設定画面でのモデル選択対応。catalog を `shared/geminiModels.ts` に移行 |
 | 2026-08-25 | Interactions APIへ移行。JSON Schema出力と`store: false`を採用 |
+| 2026-08-25 | 公式 Models / Pricing / Rate limits と catalog を照合。Interactions API 対応のテキスト生成モデルのみ掲載し、料金・レート制限の記述を更新 |
