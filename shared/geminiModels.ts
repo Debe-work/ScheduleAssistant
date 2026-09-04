@@ -10,9 +10,21 @@ export type GeminiModelOption = {
 /** Schedule generation candidates. Update via .cursor/commands/update-gemini-models.md */
 export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
+    id: 'gemini-3.8-flash',
+    label: 'Gemini 3.8 Flash',
+    description: '最新・最高性能 Flash。複雑な推論・エージェント向け',
+    freeTier: true,
+  },
+  {
+    id: 'gemini-3.7-flash',
+    label: 'Gemini 3.7 Flash',
+    description: '高速 Flash。コーディング・ツール連携向け',
+    freeTier: true,
+  },
+  {
     id: 'gemini-3.6-flash',
     label: 'Gemini 3.6 Flash',
-    description: '最新 Flash 系。品質寄り',
+    description: 'Flash 系。品質寄り',
     freeTier: true,
   },
   {

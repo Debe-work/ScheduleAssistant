@@ -3,7 +3,7 @@
 Schedule Assistant で利用する Gemini モデルの調査メモ。  
 公式情報は変わることがあるため、最終判断は [公式 Pricing](https://ai.google.dev/gemini-api/docs/pricing) と [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) を正とする。
 
-**調査日**: 2026-08-25
+**調査日**: 2026-09-04
 
 ---
 
@@ -56,7 +56,9 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | モデル | 無料枠 | 有料時の目安（入力 / 出力 per 1M tokens） | 備考 |
 |---|---|---|---|
-| **Gemini 3.6 Flash** | あり | $1.50 / $7.50 | 最新 Flash 系 |
+| **Gemini 3.8 Flash** | あり | $1.50 / $7.50 | 最新・最高性能 Flash（2026-09 GA） |
+| **Gemini 3.7 Flash** | あり | $1.50 / $7.50 | 高速 Flash（2026-08 GA） |
+| **Gemini 3.6 Flash** | あり | $1.50 / $7.50 | Flash 系 |
 | **Gemini 3.5 Flash** | あり | $1.50 / $9.00 | GA。高性能 Flash |
 | **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | 安・高速寄り |
 | **Gemini 3.1 Flash-Lite** | あり | $0.25 / $1.50 | |
@@ -128,7 +130,7 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | 方針 | 候補 | 向いているケース |
 |---|---|---|
-| **品質優先** | `gemini-3.6-flash`, `gemini-3.5-flash` | 複雑な制約・推論を増やしたい |
+| **品質優先** | `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash` | 複雑な制約・推論を増やしたい |
 | **現状維持** | `gemini-2.5-flash` | 実績あり・バランス型 |
 | **枠・コスト優先** | `gemini-2.5-flash-lite`, `gemini-3.1-flash-lite` | 個人利用・1日の生成回数を増やしたい |
 | **推論・品質優先** | `gemini-2.5-pro` | 無料枠あり。複雑な制約・推論向け |
@@ -137,7 +139,7 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 ### おすすめの検討順
 
 1. まず `gemini-3.5-flash-lite`（デフォルト）で品質・429 エラーを確認
-2. 品質不足なら `gemini-3.5-flash` または `gemini-3.6-flash` を試す
+2. 品質不足なら `gemini-3.8-flash` → `gemini-3.7-flash` → `gemini-3.5-flash` の順で試す
 3. RPD / RPM に当たるなら `gemini-3.1-flash-lite` に下げる
 4. それでも不足なら有料 tier または Pro 系
 
@@ -178,3 +180,4 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | 2026-07-27 | 設定画面でのモデル選択対応。catalog を `shared/geminiModels.ts` に移行 |
 | 2026-08-25 | Interactions APIへ移行。JSON Schema出力と`store: false`を採用 |
 | 2026-08-25 | 公式 Models / Pricing / Rate limits と catalog を照合。Interactions API 対応のテキスト生成モデルのみ掲載し、料金・レート制限の記述を更新 |
+| 2026-09-04 | `gemini-3.8-flash`（9/2 GA）と `gemini-3.7-flash`（8/13 GA）を無料枠付きで catalog に追加 |
