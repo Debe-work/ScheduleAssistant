@@ -10,27 +10,21 @@ export type GeminiModelOption = {
 /** Schedule generation candidates. Update via .cursor/commands/update-gemini-models.md */
 export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
+    id: 'gemini-4-argon',
+    label: 'Gemini 4 Argon',
+    description: 'フラッグシップ推論。API 無料枠なし',
+    freeTier: false,
+  },
+  {
     id: 'gemini-3.8-flash',
     label: 'Gemini 3.8 Flash',
     description: '最新・最高性能 Flash。複雑な推論・エージェント向け',
     freeTier: true,
   },
   {
-    id: 'gemini-3.7-flash',
-    label: 'Gemini 3.7 Flash',
-    description: '高速 Flash。コーディング・ツール連携向け',
-    freeTier: true,
-  },
-  {
     id: 'gemini-3.6-flash',
     label: 'Gemini 3.6 Flash',
-    description: 'Flash 系。品質寄り',
-    freeTier: true,
-  },
-  {
-    id: 'gemini-3.5-flash',
-    label: 'Gemini 3.5 Flash',
-    description: '最新の高性能 Flash。品質と速度のバランス',
+    description: '前世代 Flash。速度と品質のバランス',
     freeTier: true,
   },
   {
@@ -54,25 +48,25 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
     id: 'gemini-3-flash-preview',
     label: 'Gemini 3 Flash Preview',
-    description: 'Preview 版 Flash',
+    description: 'Preview 版 Flash（レガシー）',
     freeTier: true,
   },
   {
     id: 'gemini-2.5-pro',
     label: 'Gemini 2.5 Pro',
-    description: '推論強め。無料枠の RPD は厳しめ',
+    description: '推論強め。2026-12-01 以降は 3.8 Flash へ自動ルーティング',
     freeTier: true,
   },
   {
     id: 'gemini-2.5-flash',
     label: 'Gemini 2.5 Flash',
-    description: '実績あるバランス型',
+    description: '実績あるバランス型。2026-12-01 以降は 3.5 Flash-Lite へ自動ルーティング',
     freeTier: true,
   },
   {
     id: 'gemini-2.5-flash-lite',
     label: 'Gemini 2.5 Flash-Lite',
-    description: '最安クラス',
+    description: '最安クラス。新規は 3.5 Flash-Lite / 3.8 Flash 推奨',
     freeTier: true,
   },
 ];

@@ -3,7 +3,7 @@
 Schedule Assistant で利用する Gemini モデルの調査メモ。  
 公式情報は変わることがあるため、最終判断は [公式 Pricing](https://ai.google.dev/gemini-api/docs/pricing) と [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) を正とする。
 
-**調査日**: 2026-09-04
+**調査日**: 2026-11-08
 
 ---
 
@@ -26,7 +26,7 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 ## モデル一覧の更新手順
 
-1. 公式 [Models](https://ai.google.dev/gemini-api/docs/models) / [Pricing](https://ai.google.dev/gemini-api/docs/pricing) を確認
+1. 公式 [Models](https://ai.google.dev/gemini-api/docs/models) / [Pricing](https://ai.google.dev/gemini-api/docs/pricing) / [Interactions](https://ai.google.dev/gemini-api/docs/interactions-overview) を確認
 2. [`shared/geminiModels.ts`](../shared/geminiModels.ts) の `GEMINI_MODEL_CATALOG` を更新
 3. 本ファイル（調査メモ）のテーブル・更新履歴を同期
 4. `yarn test && yarn worker:typecheck && yarn lint` を実行
@@ -56,28 +56,30 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | モデル | 無料枠 | 有料時の目安（入力 / 出力 per 1M tokens） | 備考 |
 |---|---|---|---|
-| **Gemini 3.8 Flash** | あり | $1.50 / $7.50 | 最新・最高性能 Flash（2026-09 GA） |
-| **Gemini 3.7 Flash** | あり | $1.50 / $7.50 | 高速 Flash（2026-08 GA） |
-| **Gemini 3.6 Flash** | あり | $1.50 / $7.50 | Flash 系 |
-| **Gemini 3.5 Flash** | あり | $1.50 / $9.00 | GA。高性能 Flash |
-| **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | 安・高速寄り |
-| **Gemini 3.1 Flash-Lite** | あり | $0.25 / $1.50 | |
-| **Gemini 3 Flash Preview** | あり | $0.50 / $3.00 前後 | Preview |
-| **Gemini 2.5 Pro** | あり | $1.25 / $10.00（≤200k tokens） | 推論強め。無料枠の RPD は厳しめ |
-| **Gemini 2.5 Flash** | あり | $0.30 / $2.50 | **現行利用中**。バランス型 |
-| **Gemini 2.5 Flash-Lite** | あり | $0.10 / $0.40 前後 | 最安クラス |
+| **Gemini 3.8 Flash** | あり | $0.75 / $3.75（〜2026-12-31）→ $1.50 / $7.50 | 最新・最高性能 Flash |
+| **Gemini 3.6 Flash** | あり | $0.75 / $3.75（〜2026-12-31）→ $1.50 / $7.50 | 前世代 Flash |
+| **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | **現行デフォルト**。安・高速寄り |
+| **Gemini 3.1 Flash-Lite** | あり | $0.25 / $1.50 | 軽量 |
+| **Gemini 3 Flash Preview** | あり | $0.50 / $3.00 | Preview（レガシー） |
+| **Gemini 2.5 Pro** | あり | $1.25 / $10.00（≤200k tokens） | 2026-12-01 以降は `gemini-3.8-flash` へ自動ルーティング。既存利用者向け |
+| **Gemini 2.5 Flash** | あり | $0.30 / $2.50 | 2026-12-01 以降は `gemini-3.5-flash-lite` へ自動ルーティング。既存利用者向け |
+| **Gemini 2.5 Flash-Lite** | あり | $0.10 / $0.40 | 最安クラス。新規は 3.5 Flash-Lite / 3.8 Flash 推奨 |
 
 ### その他（無料枠あり・本アプリ用途外）
 
 | モデル | 用途 |
 |---|---|
+| Gemini 3.8 Live / Live Extended Thinking | Live API |
+| Gemini 3.8 Flash TTS / Flash-Lite TTS | 音声合成 |
+| Gemini 3.5 Transcribe / Transcribe Live | 音声認識 |
 | Gemini 3.5 Live Translate | 翻訳 |
-| Gemini 3.1 Flash Live Preview | Live API |
-| Gemini 3.1 Flash TTS Preview | 音声合成 |
+| Gemini 3.1 Flash Live Preview | Live API（レガシー） |
+| Gemini 3.1 Flash TTS Preview | 音声合成（レガシー） |
 | Gemini 2.5 Flash Native Audio (Live API) | 音声 |
 | Gemini 2.5 Flash Preview TTS | 音声合成 |
 | Gemini Embedding / Gemini Embedding 2 | 埋め込み |
-| Gemini Robotics-ER 1.6 Preview | ロボティクス |
+| Gemini Robotics-ER 2 Preview | ロボティクス |
+| Gemma 4 | オープンモデル（Interactions 対応だが本アプリ catalog 外） |
 
 ---
 
@@ -85,13 +87,23 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | モデル | 備考 |
 |---|---|
+| `gemini-4-argon` | フラッグシップ推論。API 無料枠なし |
 | `gemini-3.1-pro-preview` | 高推論。API 無料枠なし |
-| Gemini Omni Flash Preview | |
-| Gemini 3.1 Flash Image (Nano Banana 2) | 画像生成 |
+| Gemini Omni Flash | 動画生成 |
+| Gemini Nano Banana 2.1 / 3.1 Flash Image / 3.1 Flash Lite Image | 画像生成 |
 | Gemini 3 Pro Image (Nano Banana Pro) | 画像生成 |
-| Gemini 2.5 Flash Image (Nano Banana) | 画像生成 |
+| Gemini 2.5 Flash Image (Nano Banana) | 画像生成（廃止予定） |
 | Gemini 2.5 Computer Use Preview | エージェント系 |
-| Imagen 4 / Veo 3 / Lyria 3 など | 画像・動画・音楽 |
+| Imagen / Veo / Lyria など | 画像・動画・音楽 |
+
+---
+
+## catalog から外したモデル
+
+| モデル | 理由 |
+|---|---|
+| `gemini-3.7-flash` | 廃止。Interactions 対応一覧・Pricing から削除済み（`gemini-3.8-flash` へルーティング） |
+| `gemini-3.5-flash` | 廃止。Interactions 対応一覧・Pricing から削除済み（`gemini-3.6-flash` へルーティング） |
 
 ---
 
@@ -120,7 +132,8 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 2. **SLA なし**: 無料枠はベストエフォート。本番 SLA は有料 tier。
 3. **クレジットカード不要**: API キーは AI Studio から無料で発行可能。
 4. **クォータはプロジェクト単位**: API キーではなく Google Cloud プロジェクトごとに適用。
-5. **Preview モデル**: 仕様・提供終了日が変わりやすい。本番利用は GA モデルを優先。
+5. **Preview / レガシーモデル**: 仕様・提供終了日が変わりやすい。本番利用は GA モデルを優先。
+6. **Gemini 2.5 系**: API は既存利用者向けに制限。新規は 3.x / 4 系を使う。
 
 ---
 
@@ -130,18 +143,18 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | 方針 | 候補 | 向いているケース |
 |---|---|---|
-| **品質優先** | `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash` | 複雑な制約・推論を増やしたい |
-| **現状維持** | `gemini-2.5-flash` | 実績あり・バランス型 |
+| **品質優先（無料）** | `gemini-3.8-flash`, `gemini-3.6-flash` | 複雑な制約・推論を増やしたい |
+| **現状維持** | `gemini-3.5-flash-lite` | デフォルト。コストと速度のバランス |
 | **枠・コスト優先** | `gemini-2.5-flash-lite`, `gemini-3.1-flash-lite` | 個人利用・1日の生成回数を増やしたい |
-| **推論・品質優先** | `gemini-2.5-pro` | 無料枠あり。複雑な制約・推論向け |
-| **最高品質（有料覚悟）** | `gemini-3.1-pro-preview` | 無料枠なし。品質最優先 |
+| **推論・品質優先（無料）** | `gemini-2.5-pro` | 無料枠ありだが 12/1 以降は 3.8 Flash へ移行 |
+| **最高品質（有料覚悟）** | `gemini-4-argon`, `gemini-3.1-pro-preview` | 無料枠なし。品質最優先 |
 
 ### おすすめの検討順
 
 1. まず `gemini-3.5-flash-lite`（デフォルト）で品質・429 エラーを確認
-2. 品質不足なら `gemini-3.8-flash` → `gemini-3.7-flash` → `gemini-3.5-flash` の順で試す
+2. 品質不足なら `gemini-3.8-flash` → `gemini-3.6-flash` の順で試す
 3. RPD / RPM に当たるなら `gemini-3.1-flash-lite` に下げる
-4. それでも不足なら有料 tier または Pro 系
+4. それでも不足なら有料 tier、または `gemini-4-argon` / `gemini-3.1-pro-preview`
 
 ---
 
@@ -181,3 +194,4 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | 2026-08-25 | Interactions APIへ移行。JSON Schema出力と`store: false`を採用 |
 | 2026-08-25 | 公式 Models / Pricing / Rate limits と catalog を照合。Interactions API 対応のテキスト生成モデルのみ掲載し、料金・レート制限の記述を更新 |
 | 2026-09-04 | `gemini-3.8-flash`（9/2 GA）と `gemini-3.7-flash`（8/13 GA）を無料枠付きで catalog に追加 |
+| 2026-11-08 | 公式 Models / Pricing / Interactions と照合。`gemini-4-argon`（有料のみ）を追加。廃止済みの `gemini-3.7-flash` / `gemini-3.5-flash` を削除。2.5 系の廃止予定と料金を更新。`DEFAULT_GEMINI_MODEL` は据え置き |

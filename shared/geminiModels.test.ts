@@ -27,12 +27,14 @@ describe('geminiModels', () => {
   it('includes only supported text-generation models with pricing flags', () => {
     expect(GEMINI_MODEL_CATALOG).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ id: 'gemini-4-argon', freeTier: false }),
         expect.objectContaining({ id: 'gemini-3.8-flash', freeTier: true }),
-        expect.objectContaining({ id: 'gemini-3.7-flash', freeTier: true }),
         expect.objectContaining({ id: 'gemini-3.6-flash', freeTier: true }),
         expect.objectContaining({ id: 'gemini-3.1-pro-preview', freeTier: false }),
       ]),
     );
+    expect(isAllowedGeminiModel('gemini-3.7-flash')).toBe(false);
+    expect(isAllowedGeminiModel('gemini-3.5-flash')).toBe(false);
     expect(isAllowedGeminiModel('gemini-3.1-flash-image')).toBe(false);
     expect(isAllowedGeminiModel('gemini-3.1-flash-tts-preview')).toBe(false);
     expect(isAllowedGeminiModel('gemini-embedding-2')).toBe(false);
