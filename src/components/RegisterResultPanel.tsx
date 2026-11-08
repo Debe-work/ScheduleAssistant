@@ -42,11 +42,12 @@ function ConfettiBurst() {
 export function RegisterResultPanel({ result }: Props) {
   const panelRef = useRef<HTMLElement>(null);
   const hasErrors = result.errors.length > 0;
-  const createdTotal =
-    result.calendarCreated + result.tasksCreated;
-  const updatedTotal =
-    result.calendarUpdated + result.tasksUpdated;
+  const createdTotal = result.calendarCreated;
+  const updatedTotal = result.calendarUpdated + result.tasksUpdated;
   const isSuccess = !hasErrors;
+  const successDetail = result.tasksUpdated > 0
+    ? 'デイリータスクをカレンダーに登録し、既存の Todo を更新しました。'
+    : 'デイリータスクをカレンダーに登録しました。';
 
   useEffect(() => {
     panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -74,7 +75,7 @@ export function RegisterResultPanel({ result }: Props) {
           </h2>
           <p className="register-result-subtitle">
             {isSuccess
-              ? 'Google カレンダーと Todo への反映が終わりました。'
+              ? successDetail
               : '一部の項目でエラーが発生しました。詳細を確認してください。'}
           </p>
         </div>
@@ -86,7 +87,7 @@ export function RegisterResultPanel({ result }: Props) {
             <span className="register-stat-value">{createdTotal}</span>
             <span className="register-stat-label">新規作成</span>
             <span className="register-stat-detail">
-              カレンダー {result.calendarCreated} / Todo {result.tasksCreated}
+              カレンダー {result.calendarCreated}
             </span>
           </div>
         )}
@@ -99,20 +100,7 @@ export function RegisterResultPanel({ result }: Props) {
             </span>
           </div>
         )}
-        {result.skipped > 0 && (
-          <div className="register-stat register-stat--skip">
-            <span className="register-stat-value">{result.skipped}</span>
-            <span className="register-stat-label">省略</span>
-            <span className="register-stat-detail">既存 Todo と同名</span>
-          </div>
-        )}
       </div>
-
-      {result.skipped > 0 && (
-        <p className="register-result-note">
-          同名の Todo がすでにあるため、新規作成を省略しました。内容の更新は「更新」件数に含まれます。
-        </p>
-      )}
 
       {result.warnings.length > 0 && (
         <div className="register-result-alert register-result-alert--warning">

@@ -6,7 +6,7 @@ import {
   findOverlaps,
   updateCalendarEvent,
 } from './googleCalendar';
-import { createTask, updateTask } from './googleTasks';
+import { updateTask } from './googleTasks';
 import { registerSchedule } from './scheduleRegister';
 
 vi.mock('./googleCalendar', () => ({
@@ -17,7 +17,6 @@ vi.mock('./googleCalendar', () => ({
 }));
 
 vi.mock('./googleTasks', () => ({
-  createTask: vi.fn(),
   updateTask: vi.fn(),
 }));
 
@@ -25,7 +24,6 @@ const createCalendarEventMock = vi.mocked(createCalendarEvent);
 const ensureScheduleAssistantCalendarMock = vi.mocked(ensureScheduleAssistantCalendar);
 const findOverlapsMock = vi.mocked(findOverlaps);
 const updateCalendarEventMock = vi.mocked(updateCalendarEvent);
-const createTaskMock = vi.mocked(createTask);
 const updateTaskMock = vi.mocked(updateTask);
 
 function dailyItem(item: Omit<ScheduleItem, 'source'>): ScheduleItem {
@@ -39,11 +37,10 @@ describe('registerSchedule', () => {
     createCalendarEventMock.mockResolvedValue(undefined);
     updateCalendarEventMock.mockResolvedValue(undefined);
     updateTaskMock.mockResolvedValue(undefined);
-    createTaskMock.mockImplementation(async () => `task-${createTaskMock.mock.calls.length}`);
     findOverlapsMock.mockReturnValue([]);
   });
 
-  it('updates existing items and creates daily calendar events and parent-child tasks', async () => {
+  it('updates existing items and creates daily calendar events without Google Tasks', async () => {
     const existingItems: ScheduleItem[] = [
       {
         id: 'calendar-1',
@@ -91,9 +88,7 @@ describe('registerSchedule', () => {
     expect(result).toEqual({
       calendarCreated: 2,
       calendarUpdated: 1,
-      tasksCreated: 3,
       tasksUpdated: 1,
-      skipped: 0,
       errors: [],
       warnings: [],
     });
@@ -112,41 +107,34 @@ describe('registerSchedule', () => {
       'schedule-assistant-calendar',
       expect.stringContaining('- 08:15-08:25 朝食'),
     );
-    expect(createTaskMock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ title: 'AM-HK' }),
-      '2026-07-06',
-    );
-    expect(createTaskMock).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ title: '朝食' }),
-      '2026-07-06',
-      'task-1',
-      undefined,
-    );
-    expect(createTaskMock).toHaveBeenNthCalledWith(
-      3,
-      expect.objectContaining({ title: '掃除' }),
-      '2026-07-06',
-      'task-1',
-      'task-2',
-    );
+    expect(createCalendarEventMock).toHaveBeenCalledTimes(2);
   });
 
-  it('skips creating daily tasks that duplicate existing task titles', async () => {
+  it('registers a daily item on the calendar even when a Todo has the same title', async () => {
     const result = await registerSchedule(
       {
         date: '2026-07-06',
         summary: '生成しました',
-        items: [dailyItem({ title: '既存Todo' })],
+        items: [
+          dailyItem({
+            title: '既存Todo',
+            startTime: '2026-07-06T12:00:00',
+            endTime: '2026-07-06T12:30:00',
+          }),
+          dailyItem({ title: '時刻なし' }),
+        ],
       },
       [{ title: '既存Todo', source: 'task' }],
     );
 
-    expect(result.skipped).toBe(1);
-    expect(result.tasksCreated).toBe(0);
-    expect(ensureScheduleAssistantCalendarMock).not.toHaveBeenCalled();
-    expect(createTaskMock).not.toHaveBeenCalled();
+    expect(result.calendarCreated).toBe(1);
+    expect(result.tasksUpdated).toBe(0);
+    expect(updateTaskMock).not.toHaveBeenCalled();
+    expect(createCalendarEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ title: '既存Todo' }),
+      'schedule-assistant-calendar',
+      expect.any(String),
+    );
   });
 
   it('collects warnings and per-item errors while continuing registration', async () => {
@@ -164,10 +152,7 @@ describe('registerSchedule', () => {
 
     expect(result.warnings).toEqual(['「既存予定」と「追加タスク」が重複しています']);
     expect(result.errors).toEqual(['Calendar 更新失敗']);
-    expect(result.tasksCreated).toBe(1);
-    expect(createTaskMock).toHaveBeenCalledWith(
-      expect.objectContaining({ title: '追加タスク' }),
-      '2026-07-06',
-    );
+    expect(result.calendarCreated).toBe(0);
+    expect(createCalendarEventMock).not.toHaveBeenCalled();
   });
 });

@@ -61,7 +61,7 @@ export function PreviewPage() {
 
   const handleRegister = async () => {
     if (!draft) return;
-    if (!confirm('専用カレンダーと Google Todo に登録しますか？')) return;
+    if (!confirm('デイリータスクを専用カレンダーに登録します。既存の Google Todo は更新します。よろしいですか？')) return;
 
     setRegistering(true);
     setRegisterResult(null);
@@ -138,7 +138,8 @@ export function PreviewPage() {
             <HelpHint label="スケジュール編集のヒント">
               <p>デイリータスク・Google Todo・カレンダーの取得項目を編集できます。</p>
               <p>終日予定は日付のみのため、時刻は編集できません。</p>
-              <p>登録時は時刻把握用に専用カレンダーへ予定を作り、Todo 操作用に Google Todo も作成・更新します。</p>
+              <p>デイリータスクは専用カレンダーの予定として登録します。子タスクは予定の説明に含めます。</p>
+              <p>既存の Google Todo は新しく作らず、時刻だけ更新します。</p>
             </HelpHint>
           </div>
         </div>

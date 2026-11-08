@@ -3,14 +3,12 @@ import { toErrorMessage } from '../utils/errors';
 import { formatTimeRange } from '../utils/time';
 import { groupDailyItems } from '../utils/scheduleItems';
 import { createCalendarEvent, ensureScheduleAssistantCalendar, findOverlaps, updateCalendarEvent } from './googleCalendar';
-import { createTask, updateTask } from './googleTasks';
+import { updateTask } from './googleTasks';
 
 export type RegisterResult = {
   calendarCreated: number;
   calendarUpdated: number;
-  tasksCreated: number;
   tasksUpdated: number;
-  skipped: number;
   errors: string[];
   warnings: string[];
 };
@@ -43,9 +41,7 @@ export async function registerSchedule(
   const result: RegisterResult = {
     calendarCreated: 0,
     calendarUpdated: 0,
-    tasksCreated: 0,
     tasksUpdated: 0,
-    skipped: 0,
     errors: [],
     warnings: findOverlaps([...existingItems, ...schedule.items]),
   };
@@ -83,39 +79,12 @@ export async function registerSchedule(
     }
   }
 
-  const existingTaskTitles = new Set(
-    existingItems
-      .filter((item) => item.source === 'task')
-      .map((item) => item.title),
-  );
-
   for (const parent of topLevel) {
     try {
       const children = (childrenByParent.get(parent.title) ?? []).map(({ item }) => item);
       if (calendarId && hasCalendarTime(parent)) {
         await createCalendarEvent(parent, calendarId, buildCalendarDescription(parent, children));
         result.calendarCreated++;
-      }
-
-      if (existingTaskTitles.has(parent.title)) {
-        result.skipped++;
-        continue;
-      }
-
-      const parentId = await createTask(parent, schedule.date);
-      existingTaskTitles.add(parent.title);
-      result.tasksCreated++;
-
-      let previousChildId: string | undefined;
-      for (const child of children) {
-        if (existingTaskTitles.has(child.title)) {
-          result.skipped++;
-          continue;
-        }
-        const childId = await createTask(child, schedule.date, parentId, previousChildId);
-        previousChildId = childId;
-        existingTaskTitles.add(child.title);
-        result.tasksCreated++;
       }
     } catch (e) {
       result.errors.push(toErrorMessage(e));

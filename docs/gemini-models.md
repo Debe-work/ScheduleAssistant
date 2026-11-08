@@ -11,7 +11,7 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 
 | 項目 | 値 |
 |---|---|
-| デフォルトモデル | `gemini-3.5-flash-lite` |
+| デフォルトモデル | `gemini-3.8-flash` |
 | ユーザー選択 | 設定画面で変更可能（localStorage `gemini-model:v1`） |
 | 呼び出し経路 | フロント → Worker `POST /api/gemini/schedule` → Gemini Interactions API |
 | catalog 定義 | [`shared/geminiModels.ts`](../shared/geminiModels.ts) |
@@ -19,7 +19,7 @@ Schedule Assistant で利用する Gemini モデルの調査メモ。
 
 ```ts
 // shared/geminiModels.ts
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 ```
 
 ---
@@ -56,9 +56,9 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | モデル | 無料枠 | 有料時の目安（入力 / 出力 per 1M tokens） | 備考 |
 |---|---|---|---|
-| **Gemini 3.8 Flash** | あり | $0.75 / $3.75（〜2026-12-31）→ $1.50 / $7.50 | 最新・最高性能 Flash |
+| **Gemini 3.8 Flash** | あり | $0.75 / $3.75（〜2026-12-31）→ $1.50 / $7.50 | **現行デフォルト**。最新・最高性能 Flash |
 | **Gemini 3.6 Flash** | あり | $0.75 / $3.75（〜2026-12-31）→ $1.50 / $7.50 | 前世代 Flash |
-| **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | **現行デフォルト**。安・高速寄り |
+| **Gemini 3.5 Flash-Lite** | あり | $0.30 / $2.50 | 安・高速寄り |
 | **Gemini 3.1 Flash-Lite** | あり | $0.25 / $1.50 | 軽量 |
 | **Gemini 3 Flash Preview** | あり | $0.50 / $3.00 | Preview（レガシー） |
 | **Gemini 2.5 Pro** | あり | $1.25 / $10.00（≤200k tokens） | 2026-12-01 以降は `gemini-3.8-flash` へ自動ルーティング。既存利用者向け |
@@ -143,16 +143,16 @@ Standard モードを前提とする（Batch / Flex は無料枠なしのこと�
 
 | 方針 | 候補 | 向いているケース |
 |---|---|---|
-| **品質優先（無料）** | `gemini-3.8-flash`, `gemini-3.6-flash` | 複雑な制約・推論を増やしたい |
-| **現状維持** | `gemini-3.5-flash-lite` | デフォルト。コストと速度のバランス |
+| **品質優先（無料）** | `gemini-3.8-flash`, `gemini-3.6-flash` | デフォルトは `gemini-3.8-flash`。複雑な制約・推論向け |
+| **コスト・速度優先** | `gemini-3.5-flash-lite` | 生成を軽くしたいとき |
 | **枠・コスト優先** | `gemini-2.5-flash-lite`, `gemini-3.1-flash-lite` | 個人利用・1日の生成回数を増やしたい |
 | **推論・品質優先（無料）** | `gemini-2.5-pro` | 無料枠ありだが 12/1 以降は 3.8 Flash へ移行 |
 | **最高品質（有料覚悟）** | `gemini-4-argon`, `gemini-3.1-pro-preview` | 無料枠なし。品質最優先 |
 
 ### おすすめの検討順
 
-1. まず `gemini-3.5-flash-lite`（デフォルト）で品質・429 エラーを確認
-2. 品質不足なら `gemini-3.8-flash` → `gemini-3.6-flash` の順で試す
+1. まず `gemini-3.8-flash`（デフォルト）で品質・429 エラーを確認
+2. 速度や枠を優先するなら `gemini-3.6-flash` → `gemini-3.5-flash-lite` の順で下げる
 3. RPD / RPM に当たるなら `gemini-3.1-flash-lite` に下げる
 4. それでも不足なら有料 tier、または `gemini-4-argon` / `gemini-3.1-pro-preview`
 
@@ -195,3 +195,4 @@ catalog 自体を最新化する場合は Agent チャットで `/update-gemini-
 | 2026-08-25 | 公式 Models / Pricing / Rate limits と catalog を照合。Interactions API 対応のテキスト生成モデルのみ掲載し、料金・レート制限の記述を更新 |
 | 2026-09-04 | `gemini-3.8-flash`（9/2 GA）と `gemini-3.7-flash`（8/13 GA）を無料枠付きで catalog に追加 |
 | 2026-11-08 | 公式 Models / Pricing / Interactions と照合。`gemini-4-argon`（有料のみ）を追加。廃止済みの `gemini-3.7-flash` / `gemini-3.5-flash` を削除。2.5 系の廃止予定と料金を更新。`DEFAULT_GEMINI_MODEL` は据え置き |
+| 2026-11-08 | デフォルトモデルを `gemini-3.8-flash` に変更 |

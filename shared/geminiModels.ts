@@ -1,4 +1,4 @@
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 export type GeminiModelOption = {
   id: string;
@@ -18,7 +18,7 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
     id: 'gemini-3.8-flash',
     label: 'Gemini 3.8 Flash',
-    description: '最新・最高性能 Flash。複雑な推論・エージェント向け',
+    description: '最新・最高性能 Flash。デフォルト',
     freeTier: true,
   },
   {
@@ -30,7 +30,7 @@ export const GEMINI_MODEL_CATALOG: GeminiModelOption[] = [
   {
     id: 'gemini-3.5-flash-lite',
     label: 'Gemini 3.5 Flash-Lite',
-    description: 'GA の低コスト・高速モデル。デフォルト',
+    description: 'GA の低コスト・高速モデル',
     freeTier: true,
   },
   {

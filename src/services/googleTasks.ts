@@ -114,14 +114,6 @@ function buildTaskBody(item: ScheduleItem, date: string): Record<string, string>
   return body;
 }
 
-function buildInsertPath(listId: string, parentId?: string, previousId?: string): string {
-  const params = new URLSearchParams();
-  if (parentId) params.set('parent', parentId);
-  if (previousId) params.set('previous', previousId);
-  const query = params.toString();
-  return `/lists/${listId}/tasks${query ? `?${query}` : ''}`;
-}
-
 export async function fetchTasks(date: string): Promise<ScheduleItem[]> {
   const lists = await fetchTaskLists();
   const itemsByList = await Promise.all(lists.map(async (list) => {
@@ -157,29 +149,6 @@ export async function fetchTasks(date: string): Promise<ScheduleItem[]> {
   }));
 
   return itemsByList.flat();
-}
-
-export async function createTask(
-  item: ScheduleItem,
-  date: string,
-  parentId?: string,
-  previousId?: string,
-): Promise<string> {
-  const listId = await getTaskListId(item.category, item.listId);
-  const body = buildTaskBody(item, date);
-  const path = buildInsertPath(listId, parentId, previousId);
-  const res = await apiFetch(path, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Tasks 登録失敗 (${item.title}): ${err}`);
-  }
-
-  const created = await res.json();
-  return created.id as string;
 }
 
 export async function updateTask(item: ScheduleItem, date: string): Promise<void> {

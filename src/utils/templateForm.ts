@@ -33,7 +33,7 @@ export const PARENT_OPTIONAL_FIELDS: FieldMeta<ParentOptionalKey>[] = [
   {
     key: 'category',
     label: 'カテゴリ',
-    description: 'Google Todo に登録するリスト名です。',
+    description: 'タスクの分類名です。カレンダーの登録先には使いません。',
     inputType: 'text',
   },
   {
@@ -57,7 +57,7 @@ export const PARENT_OPTIONAL_FIELDS: FieldMeta<ParentOptionalKey>[] = [
   {
     key: 'defaultComplete',
     label: '登録時に完了',
-    description: 'true の場合、登録時点でステータスを完了にします。',
+    description: 'true の場合、生成結果のステータスを完了にします。カレンダーの予定は完了になりません。',
     inputType: 'boolean',
   },
   {
@@ -96,7 +96,7 @@ export const CHILD_OPTIONAL_FIELDS: FieldMeta<ChildOptionalKey>[] = [
   {
     key: 'defaultComplete',
     label: '登録時に完了',
-    description: 'true の場合、登録時点でステータスを完了にします。',
+    description: 'true の場合、生成結果のステータスを完了にします。カレンダーの予定は完了になりません。',
     inputType: 'boolean',
   },
 ];

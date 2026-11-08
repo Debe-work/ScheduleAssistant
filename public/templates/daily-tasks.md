@@ -76,6 +76,7 @@ tasks:
     children:
       - name: 入浴
         condition: 登録日が月曜日
+      - name: mail-check
       - name: (夜-干物取り込み)
       - name: 着替え用意
       - name: 翌朝食準備
